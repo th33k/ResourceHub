@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { BASE_URLS } from "../services/api/config";
 import "./css/ForgotPassword.css";
+import { Link } from "react-router-dom";
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -84,7 +86,7 @@ const ForgotPassword = () => {
             </button>
           </form>
           <p>
-            Go back to login page? <a href="/login">Login</a>
+            Go back to login page? <Link to="/login">Login</Link>
           </p>
         </div>
       </div>

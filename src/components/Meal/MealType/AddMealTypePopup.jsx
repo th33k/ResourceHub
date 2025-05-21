@@ -6,22 +6,26 @@ import { BASE_URLS } from '../../../services/api/config';
 import { toast } from 'react-toastify';
 
 export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
+  // State for meal name input
   const [mealName, setMealName] = useState('');
+  // State for image preview URL
   const [mealImageUrl, setMealImageUrl] = useState('');
+  // State to hold selected file object
   const [imageFile, setImageFile] = useState(null);
+  // State to track upload progress
   const [uploading, setUploading] = useState(false);
 
-  // Handle file selection
+  // Handle selection of file input and create preview URL
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      const fileURL = URL.createObjectURL(file); // Create a preview URL
-      setMealImageUrl(fileURL); // Set preview URL
+      const fileURL = URL.createObjectURL(file); // Preview image
+      setMealImageUrl(fileURL);
     }
   };
 
-  // Upload image to Cloudinary
+  // Upload selected image to Cloudinary and return URL
   const uploadImageToCloudinary = async () => {
     if (!imageFile) {
       toast.error('Please select an image to upload');
@@ -31,8 +35,8 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', imageFile);
-    formData.append('upload_preset', 'ResourceHub'); // Your upload preset
-    formData.append('cloud_name', 'dyjwjhekd'); // Your Cloudinary cloud name
+    formData.append('upload_preset', 'ResourceHub'); // Cloudinary preset
+    formData.append('cloud_name', 'dyjwjhekd'); // Cloudinary cloud name
 
     try {
       const response = await fetch(
@@ -45,7 +49,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
 
       const data = await response.json();
       setUploading(false);
-      return data.secure_url; // Cloudinary URL
+      return data.secure_url; // Return uploaded image URL
     } catch (error) {
       console.error('Upload failed:', error);
       setUploading(false);
@@ -54,11 +58,12 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
     }
   };
 
+  // Submit meal name and image URL to backend
   const handleSubmit = async () => {
     const imageUrl = await uploadImageToCloudinary();
     if (!imageUrl) return;
 
-    setMealImageUrl(imageUrl); // Save Cloudinary image URL
+    setMealImageUrl(imageUrl); // Update with Cloudinary URL
 
     if (imageUrl && mealName) {
       try {
@@ -67,7 +72,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             mealtype_name: mealName,
-            mealtype_image_url: imageUrl, // Use the Cloudinary image URL
+            mealtype_image_url: imageUrl, // Use uploaded image URL
           }),
         });
 
@@ -81,7 +86,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
         const result = await response.json();
         console.log('Server Response:', result);
         onClose();
-        onSubmit(); // Refresh meal type list
+        onSubmit(); // Refresh meal types list
       } catch (error) {
         console.error('Fetch error:', error);
         toast.error('Failed to add meal type. Please try again.');
@@ -96,9 +101,12 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
       <div className="mealtime-popup-container">
         <div className="mealtime-popup-header">
           <div>
+            {/* Popup title */}
             <h2 className="mealtime-title">{title}</h2>
+            {/* Popup subtitle */}
             <p className="mealtime-subtitle">{subtitle}</p>
           </div>
+          {/* Close button */}
           <button onClick={onClose} className="mealtime-close-btn">
             <X size={20} />
           </button>
@@ -107,7 +115,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
         <div className="mealtime-form">
           <div className="mealtime-input-group">
             <label className="mealtime-label">Meal Type Image</label>
-            {/* MUI Input component for file uploads */}
+            {/* File input for image upload */}
             <Input
               type="file"
               accept="image/*"
@@ -116,7 +124,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
             />
           </div>
 
-          {/* Image Preview */}
+          {/* Show image preview if available */}
           {mealImageUrl && (
             <div className="mealtime-image-preview">
               <Typography variant="h6">Preview:</Typography>
@@ -135,6 +143,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
 
           <div className="mealtime-input-group">
             <label className="mealtime-label">Meal Type Name</label>
+            {/* Text input for meal name */}
             <Input
               type="text"
               value={mealName}
@@ -146,9 +155,11 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
         </div>
 
         <div className="mealtime-buttons">
+          {/* Cancel button */}
           <button onClick={onClose} className="mealtime-cancel-btn">
             Cancel
           </button>
+          {/* Submit button disabled while uploading */}
           <button
             onClick={handleSubmit}
             className="mealtime-submit-btn"

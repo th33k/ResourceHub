@@ -20,6 +20,7 @@ function EditPopup({
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Edit Meal Type</DialogTitle>
       <DialogContent>
+        {/* Input for editing meal name */}
         <TextField
           autoFocus
           margin="dense"
@@ -30,6 +31,7 @@ function EditPopup({
           value={mealName}
           onChange={(e) => setMealName(e.target.value)}
         />
+        {/* Input for editing meal image URL */}
         <TextField
           margin="dense"
           label="Meal Type Image URL"
@@ -41,9 +43,11 @@ function EditPopup({
         />
       </DialogContent>
       <DialogActions>
+        {/* Cancel button closes popup without saving */}
         <Button onClick={onClose} color="primary">
           Cancel
         </Button>
+        {/* Save button triggers onSave callback */}
         <Button
           onClick={() => onSave(mealId, mealName, mealImage)}
           color="primary"

@@ -11,6 +11,7 @@ import './Calender-CSS/MealTimeCard.css';
 const MealTimeCard = ({ name, image, onSelect, isDisabled, id }) => {
   const [popupOpen, setPopupOpen] = React.useState(false);
 
+  // Handle card button click to open popup if not disabled
   const handleClick = () => {
     if (!isDisabled) {
       setPopupOpen(true);
@@ -19,6 +20,7 @@ const MealTimeCard = ({ name, image, onSelect, isDisabled, id }) => {
 
   return (
     <div>
+      {/* Card UI displaying meal time info */}
       <Card className="meal-time-card">
         <CardMedia
           className="meal-time-card-media"
@@ -42,6 +44,7 @@ const MealTimeCard = ({ name, image, onSelect, isDisabled, id }) => {
         </CardActions>
       </Card>
 
+      {/* Popup for selecting meal type */}
       <Popupmealtype
         open={popupOpen}
         handleClose={() => setPopupOpen(false)}

@@ -1,3 +1,4 @@
+// React imports and necessary dependencies
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Styles/AccountSection.css';
@@ -16,6 +17,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const AccountSection = () => {
+  // Form data state and UI state
   const [formData, setFormData] = useState({
     phone: '',
     email: '',
@@ -39,7 +41,7 @@ const AccountSection = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Add validation logic for password
+  // Password validation rule
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
     if (!passwordRegex.test(password)) {
@@ -48,6 +50,7 @@ const AccountSection = () => {
     return '';
   };
 
+  // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -74,6 +77,7 @@ const AccountSection = () => {
     fetchUserData();
   }, []);
 
+  // Handle input changes and password validation
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -84,6 +88,7 @@ const AccountSection = () => {
     }
   };
 
+  // Handle phone update with confirmation
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     const phoneRegex = /^0?\d{9}$/;
@@ -93,11 +98,10 @@ const AccountSection = () => {
       return;
     }
     if (!phoneRegex.test(formData.phone)) {
-      toast.error(
-        'Invalid phone number format. Please enter a valid phone number.',
-      );
+      toast.error('Invalid phone number format.');
       return;
     }
+
     try {
       const userId = localStorage.getItem('Userid');
       if (!userId) throw new Error('User ID not found');
@@ -128,6 +132,7 @@ const AccountSection = () => {
     }
   };
 
+  // Handle email update and trigger verification popup
   const handleEmailSubmit = async (email) => {
     try {
       const userId = localStorage.getItem('Userid');
@@ -162,6 +167,7 @@ const AccountSection = () => {
     }
   };
 
+  // Handle password change with confirmation
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
@@ -205,6 +211,7 @@ const AccountSection = () => {
     });
   };
 
+  // Toggle visibility of password fields
   const handleClickShowCurrentPassword = () =>
     setShowCurrentPassword((show) => !show);
   const handleClickShowNewPassword = () => setShowNewPassword((show) => !show);
@@ -219,13 +226,16 @@ const AccountSection = () => {
     event.preventDefault();
   };
 
+  // Show loading or error states
   if (loading) return <p className="loading">Loading...</p>;
   if (error) return <p className="error">Error: {error}</p>;
 
+  // Main UI rendering
   return (
     <div className="account-section">
       <h2>Account</h2>
       <div className="form-container">
+        {/* Phone update form */}
         <form onSubmit={handlePhoneSubmit} className="form-group">
           <label>Phone Number</label>
           <input
@@ -238,6 +248,7 @@ const AccountSection = () => {
           <button type="submit">Update Phone</button>
         </form>
 
+        {/* Email update section */}
         <div className="form-group">
           <label>Email</label>
           <input
@@ -255,9 +266,11 @@ const AccountSection = () => {
           </button>
         </div>
 
+        {/* Password change form */}
         <form onSubmit={handlePasswordSubmit}>
           <label>Change Password</label>
           <div className="form-group-password">
+            {/* Current password */}
             <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
               <InputLabel htmlFor="outlined-adornment-current-password">
                 Current Password
@@ -272,11 +285,7 @@ const AccountSection = () => {
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label={
-                        showCurrentPassword
-                          ? 'hide the password'
-                          : 'display the password'
-                      }
+                      aria-label="toggle current password visibility"
                       onClick={handleClickShowCurrentPassword}
                       onMouseDown={handleMouseDownPassword}
                       onMouseUp={handleMouseUpPassword}
@@ -289,6 +298,8 @@ const AccountSection = () => {
                 label="Current Password"
               />
             </FormControl>
+
+            {/* New password */}
             <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
               <InputLabel htmlFor="outlined-adornment-new-password">
                 New Password
@@ -303,11 +314,7 @@ const AccountSection = () => {
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label={
-                        showNewPassword
-                          ? 'hide the password'
-                          : 'display the password'
-                      }
+                      aria-label="toggle new password visibility"
                       onClick={handleClickShowNewPassword}
                       onMouseDown={handleMouseDownPassword}
                       onMouseUp={handleMouseUpPassword}
@@ -320,7 +327,10 @@ const AccountSection = () => {
                 label="New Password"
               />
             </FormControl>
+            {/* Password error message */}
             {passwordError && <p className="error">{passwordError}</p>}
+
+            {/* Confirm new password */}
             <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
               <InputLabel htmlFor="outlined-adornment-confirm-password">
                 Confirm New Password
@@ -335,11 +345,7 @@ const AccountSection = () => {
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label={
-                        showConfirmPassword
-                          ? 'hide the password'
-                          : 'display the password'
-                      }
+                      aria-label="toggle confirm password visibility"
                       onClick={handleClickShowConfirmPassword}
                       onMouseDown={handleMouseDownPassword}
                       onMouseUp={handleMouseUpPassword}
@@ -363,6 +369,7 @@ const AccountSection = () => {
         </form>
       </div>
 
+      {/* Email verification popup */}
       {openVerifyPopup && (
         <VerificationPopup
           onClose={() => setOpenVerifyPopup(false)}
@@ -371,6 +378,7 @@ const AccountSection = () => {
         />
       )}
 
+      {/* Confirmation dialog for phone/password updates */}
       {confirmationDialog.open && (
         <ConfirmationDialog
           message={confirmationDialog.message}

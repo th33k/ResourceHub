@@ -8,6 +8,7 @@ import AdminLayout from '../../../layouts/Admin/AdminLayout';
 import { BASE_URLS } from '../../../services/api/config';
 
 function AddMealTime() {
+  // State variables
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [mealTimes, setMealTimes] = useState([]);
   const [error, setError] = useState(null);
@@ -15,9 +16,11 @@ function AddMealTime() {
   const title = 'Add New Meal Time';
   const getSubtitle = () => 'Manage meal times for the day';
 
+  // Open and close handlers for popup
   const handlePopupOpen = () => setIsPopupOpen(true);
   const handlePopupClose = () => setIsPopupOpen(false);
 
+  // Handle deletion of a meal time
   const handleDelete = async (mealId) => {
     try {
       const response = await fetch(`${BASE_URLS.mealtime}/details/${mealId}`, {
@@ -25,7 +28,7 @@ function AddMealTime() {
       });
 
       if (response.ok) {
-        await fetchMealTimes();
+        await fetchMealTimes(); // Refresh list on success
       } else {
         setError('Failed to delete meal time');
       }
@@ -34,6 +37,7 @@ function AddMealTime() {
     }
   };
 
+  // Fetch all meal times from API
   const fetchMealTimes = async () => {
     try {
       const response = await fetch(`${BASE_URLS.mealtime}/details`);
@@ -47,6 +51,7 @@ function AddMealTime() {
     }
   };
 
+  // Fetch meal times on component mount
   useEffect(() => {
     fetchMealTimes();
   }, []);
@@ -56,6 +61,7 @@ function AddMealTime() {
       <div className="min-h-screen space-y-6 p-6">
         <h1 className="text-2xl font-semibold">Meal times</h1>
 
+        {/* Button to open the add meal time popup */}
         <Button
           variant="contained"
           className="addbtn"
@@ -67,8 +73,10 @@ function AddMealTime() {
           </span>
         </Button>
 
+        {/* Error message display */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
+        {/* Meal time cards */}
         <div className="mealtimes">
           {mealTimes.length > 0 ? (
             mealTimes.map((meal) => (
@@ -85,12 +93,13 @@ function AddMealTime() {
           )}
         </div>
 
+        {/* Add/Edit meal time popup */}
         <MealCardPopup
           open={isPopupOpen}
           onClose={handlePopupClose}
           title={title}
           subtitle={getSubtitle()}
-          onSubmit={fetchMealTimes}
+          onSubmit={fetchMealTimes} // Refresh after submission
         />
       </div>
     </AdminLayout>

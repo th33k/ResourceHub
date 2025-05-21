@@ -9,7 +9,7 @@ export default function MealTypeSelect({ onSelect }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchMealTypes();
+    fetchMealTypes(); // Fetch meal types when component mounts
   }, []);
 
   const fetchMealTypes = async () => {
@@ -19,10 +19,10 @@ export default function MealTypeSelect({ onSelect }) {
         throw new Error(`Failed to fetch meal types: ${response.status}`);
       }
       const data = await response.json();
-      setMealTypes(data);
+      setMealTypes(data); // Store retrieved meal types
     } catch (error) {
       console.error('Error fetching meal types:', error);
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`); // Show error notification
     }
   };
 
@@ -31,6 +31,7 @@ export default function MealTypeSelect({ onSelect }) {
       <h3>Select a meal type</h3>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <div className="meal">
+        {/* Render a card for each available meal type */}
         {mealTypes.map((mealType) => (
           <MealTypeCard
             key={mealType.mealtype_id}
@@ -43,7 +44,7 @@ export default function MealTypeSelect({ onSelect }) {
           />
         ))}
       </div>
-      <ToastContainer />
+      <ToastContainer /> {/* Container for toast notifications */}
     </div>
   );
 }

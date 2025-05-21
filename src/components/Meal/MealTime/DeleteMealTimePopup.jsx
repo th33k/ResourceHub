@@ -8,6 +8,7 @@ import { BASE_URLS } from '../../../services/api/config';
 function DeletePopup({ open, onClose, onDelete, mealId }) {
   const [error, setError] = useState(null);
 
+  // Handles deleting the meal time via API call
   const handleDelete = async () => {
     try {
       const response = await fetch(`${BASE_URLS.mealtime}/details/${mealId}`, {
@@ -15,8 +16,8 @@ function DeletePopup({ open, onClose, onDelete, mealId }) {
       });
 
       if (response.ok) {
-        onDelete(mealId);
-        onClose();
+        onDelete(mealId);  // Notify parent of deletion
+        onClose();         // Close popup
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to delete meal time');
@@ -29,7 +30,10 @@ function DeletePopup({ open, onClose, onDelete, mealId }) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Confirm Deletion</DialogTitle>
+
+      {/* Display error message if deletion fails */}
       {error && <p style={{ color: 'red', padding: '0 16px' }}>{error}</p>}
+
       <DialogActions>
         <Button onClick={onClose} color="primary">
           Cancel

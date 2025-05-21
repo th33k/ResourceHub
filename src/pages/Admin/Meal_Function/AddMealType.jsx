@@ -8,6 +8,7 @@ import AdminLayout from '../../../layouts/Admin/AdminLayout';
 import { BASE_URLS } from '../../../services/api/config';
 
 function AddMealType() {
+  // State variables
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [mealTypes, setMealTypes] = useState([]);
   const [error, setError] = useState(null);
@@ -15,9 +16,11 @@ function AddMealType() {
   const title = 'Add New Meal Type';
   const getSubtitle = () => 'Manage meal types for the day';
 
+  // Popup handlers
   const handlePopupOpen = () => setIsPopupOpen(true);
   const handlePopupClose = () => setIsPopupOpen(false);
 
+  // Delete meal type by ID
   const handleDelete = async (mealId) => {
     try {
       const response = await fetch(`${BASE_URLS.mealtype}/details/${mealId}`, {
@@ -25,7 +28,7 @@ function AddMealType() {
       });
 
       if (response.ok) {
-        await fetchMealTypes();
+        await fetchMealTypes(); // Refresh data after deletion
       } else {
         setError('Failed to delete meal type');
       }
@@ -34,6 +37,7 @@ function AddMealType() {
     }
   };
 
+  // Fetch all meal types from the backend
   const fetchMealTypes = async () => {
     try {
       const response = await fetch(`${BASE_URLS.mealtype}/details`);
@@ -47,6 +51,7 @@ function AddMealType() {
     }
   };
 
+  // Initial data load
   useEffect(() => {
     fetchMealTypes();
   }, []);
@@ -56,6 +61,7 @@ function AddMealType() {
       <div className="min-h-screen space-y-6 p-6">
         <h1 className="text-2xl font-semibold">Meal types</h1>
 
+        {/* Button to open popup */}
         <Button
           variant="contained"
           className="addbtn"
@@ -67,8 +73,10 @@ function AddMealType() {
           </span>
         </Button>
 
+        {/* Error message display */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
+        {/* Meal type cards */}
         <div className="mealtimes">
           {mealTypes.length > 0 ? (
             mealTypes.map((meal) => (
@@ -85,12 +93,13 @@ function AddMealType() {
           )}
         </div>
 
+        {/* Popup for adding/editing meal types */}
         <MealCardPopup
           open={isPopupOpen}
           onClose={handlePopupClose}
           title={title}
           subtitle={getSubtitle()}
-          onSubmit={fetchMealTypes}
+          onSubmit={fetchMealTypes} // Refresh list on submit
         />
       </div>
     </AdminLayout>

@@ -9,6 +9,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   const [mealName, setMealName] = useState('');
   const [mealImageUrl, setMealImageUrl] = useState('');
 
+  // Handles form submission, sends POST request to add meal time
   const handleSubmit = async () => {
     if (mealImageUrl && mealName) {
       try {
@@ -50,11 +51,13 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
             <h2 className="mealtime-title">{title}</h2>
             <p className="mealtime-subtitle">{subtitle}</p>
           </div>
+          {/* Close button for the popup */}
           <button onClick={onClose} className="mealtime-close-btn">
             <X size={20} />
           </button>
         </div>
-        {/* Preview of image from URL */}
+
+        {/* Preview the meal image entered by user */}
         {mealImageUrl && (
           <div className="mealtime-image-preview">
             <Typography variant="h6">Preview:</Typography>
@@ -72,6 +75,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           </div>
         )}
 
+        {/* Form inputs for image URL and meal name */}
         <div className="mealtime-form">
           <div className="mealtime-input-group">
             <label className="mealtime-label">Meal Time Image URL</label>
@@ -97,6 +101,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           </div>
         </div>
 
+        {/* Action buttons */}
         <div className="mealtime-buttons">
           <button onClick={onClose} className="mealtime-cancel-btn">
             Cancel

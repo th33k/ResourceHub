@@ -9,6 +9,7 @@ import './Calender-CSS/MealTypeCard.css';
 
 function MealTypeCard({ id, name, image, onSelect }) {
   return (
+    // Card representing a single meal type option
     <Card className="meal-type-card">
       <CardMedia className="meal-type-card-media" image={image} title={name} />
       <CardContent>
@@ -17,6 +18,7 @@ function MealTypeCard({ id, name, image, onSelect }) {
         </Typography>
       </CardContent>
       <CardActions className="meal-type-card-actions">
+        {/* Button triggers selection callback with id and name */}
         <Button
           variant="contained"
           className="meal-type-card-button"

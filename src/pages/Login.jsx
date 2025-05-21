@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './css/Login.css';
 import { useUser } from '../contexts/UserContext';
 import { BASE_URLS } from '../services/api/config';
@@ -136,12 +136,19 @@ function Login() {
 
           <div className="form-options">
             <label>
-              <a href="/Forgot-Password">Forgot password?</a>
+             <Link to="/forgot-password">
+                Forgot Password?
+              </Link>
             </label>
           </div>
           <button type="submit" disabled={isLoading}>
             {isLoading ? 'Signing In...' : 'SIGN IN'}
           </button>
+          <Link to="/register">
+            <button type="button" className="register-btn">
+              Create an Organization
+            </button>
+            </Link>
         </form>
       </div>
     </div>

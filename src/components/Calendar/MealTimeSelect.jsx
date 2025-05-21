@@ -13,7 +13,7 @@ export default function MealTimeSelect({
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchMealTimes();
+    fetchMealTimes(); // Fetch meal times when component mounts
   }, []);
 
   const fetchMealTimes = async () => {
@@ -23,10 +23,10 @@ export default function MealTimeSelect({
         throw new Error(`Failed to fetch meal times: ${response.status}`);
       }
       const data = await response.json();
-      setMealTimes(data);
+      setMealTimes(data); // Update state with fetched meal times
     } catch (error) {
       console.error('Error fetching meal times:', error);
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`); // Display error toast notification
     }
   };
 
@@ -40,7 +40,7 @@ export default function MealTimeSelect({
             key={mealtime.mealtime_id}
             id={mealtime.mealtime_id}
             name={mealtime.mealtime_name}
-            image={mealtime.mealtime_image_url || '/default-mealtime.png'}
+            image={mealtime.mealtime_image_url || '/default-mealtime.png'} // Fallback image if none is provided
             onSelect={(mealTypeId, mealTypeName) =>
               onAddEvent(
                 mealtime.mealtime_id,
@@ -49,7 +49,7 @@ export default function MealTimeSelect({
                 mealTypeName,
               )
             }
-            isDisabled={isMealSelected(mealtime.mealtime_id)}
+            isDisabled={isMealSelected(mealtime.mealtime_id)} // Disable if meal is already selected
           />
         ))}
       </div>

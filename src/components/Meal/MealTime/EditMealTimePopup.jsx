@@ -19,6 +19,8 @@ function EditPopup({
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Edit Meal Time</DialogTitle>
+
+      {/* Form fields for editing meal name and image URL */}
       <DialogContent>
         <TextField
           autoFocus
@@ -40,6 +42,8 @@ function EditPopup({
           onChange={(e) => setMealImage(e.target.value)}
         />
       </DialogContent>
+
+      {/* Action buttons to cancel or save changes */}
       <DialogActions>
         <Button onClick={onClose} color="primary">
           Cancel

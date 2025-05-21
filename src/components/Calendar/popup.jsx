@@ -16,12 +16,13 @@ function Popup({
       open={open}
       onClose={handleClose}
       BackdropProps={{
-        className: 'popup-backdrop1',
+        className: 'popup-backdrop1', // Custom backdrop styling
       }}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
       <Box className="popup-box1" sx={{ overflowY: 'auto' }}>
+        {/* Component for selecting meal time based on selected date */}
         <MealTimeSelect
           selectedDate={selectedDate}
           onAddEvent={onAddEvent}
