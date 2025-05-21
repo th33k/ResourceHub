@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Auth Pages
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import Register from './pages/Register';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/DashboardAdmin';
@@ -55,6 +56,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/" element={<Navigate to="/login" replace />} />
 
               {/* Admin Routes */}
