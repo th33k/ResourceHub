@@ -101,7 +101,7 @@ Download from [https://ballerina.io/downloads/](https://ballerina.io/downloads/)
 ### Configure `Config.toml`
 
 ```toml
-[back_end_ballerina.services]
+[ResourceHub.services]
 USER = "your_db_user"
 PASSWORD = "your_db_password"
 HOST = "localhost"

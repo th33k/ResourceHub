@@ -1,6 +1,6 @@
 [package]
-org = "user"
-name = "Back_End_Ballerina"
+org = "FiveStackDev"
+name = "ResourceHub"
 version = "0.1.0"
 distribution = "2201.10.3"
 

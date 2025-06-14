@@ -8,6 +8,27 @@ dependencies-toml-version = "2"
 distribution-version = "2201.10.3"
 
 [[package]]
+org = "FiveStackDev"
+name = "ResourceHub"
+version = "0.1.0"
+dependencies = [
+	{org = "ballerina", name = "email"},
+	{org = "ballerina", name = "http"},
+	{org = "ballerina", name = "io"},
+	{org = "ballerina", name = "jwt"},
+	{org = "ballerina", name = "mime"},
+	{org = "ballerina", name = "random"},
+	{org = "ballerina", name = "sql"},
+	{org = "ballerina", name = "time"},
+	{org = "ballerinai", name = "observe"},
+	{org = "ballerinax", name = "mysql"}
+]
+modules = [
+	{org = "FiveStackDev", packageName = "ResourceHub", moduleName = "ResourceHub"},
+	{org = "FiveStackDev", packageName = "ResourceHub", moduleName = "ResourceHub.services"}
+]
+
+[[package]]
 org = "ballerina"
 name = "auth"
 version = "2.12.0"
@@ -347,26 +368,5 @@ dependencies = [
 ]
 modules = [
 	{org = "ballerinax", packageName = "mysql", moduleName = "mysql"}
-]
-
-[[package]]
-org = "user"
-name = "Back_End_Ballerina"
-version = "0.1.0"
-dependencies = [
-	{org = "ballerina", name = "email"},
-	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "io"},
-	{org = "ballerina", name = "jwt"},
-	{org = "ballerina", name = "mime"},
-	{org = "ballerina", name = "random"},
-	{org = "ballerina", name = "sql"},
-	{org = "ballerina", name = "time"},
-	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "mysql"}
-]
-modules = [
-	{org = "user", packageName = "Back_End_Ballerina", moduleName = "Back_End_Ballerina"},
-	{org = "user", packageName = "Back_End_Ballerina", moduleName = "Back_End_Ballerina.services"}
 ]
 

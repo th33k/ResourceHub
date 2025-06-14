@@ -1,4 +1,4 @@
-import Back_End_Ballerina.services as resourcehubservices;
+import ResourceHub.services as resourcehubservices;
 public function main() returns error? {
     check resourcehubservices:connectDatabase();
     check resourcehubservices:startMealTypeService();
