@@ -1,0 +1,51 @@
+services:
+  frontend:
+    build:
+      context: ./Front-End
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - resourcehub-network
+
+  backend:
+    build:
+      context: ./Back-End
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    networks:
+      - resourcehub-network
+    # Add environment variables for database connection if needed
+    # environment:
+    #   - DB_HOST=db
+    #   - DB_PORT=3306
+    #   - DB_USER=user
+    #   - DB_PASSWORD=password
+    #   - DB_NAME=resourcehub
+    # depends_on:
+    #   - db # Uncomment if you add a database service
+
+networks:
+  resourcehub-network:
+    driver: bridge
+
+# Add a database service if needed
+# volumes:
+#   db_data: # Persists database data
+
+# services:
+#   db:
+#     image: mysql:8.0
+#     restart: always
+#     environment:
+#       MYSQL_ROOT_PASSWORD: rootpassword
+#       MYSQL_DATABASE: resourcehub
+#       MYSQL_USER: user
+#       MYSQL_PASSWORD: password
+#     ports:
+#       - "3306:3306"
+#     volumes:
+#       - db_data:/var/lib/mysql
+#     networks:
+#       - resourcehub-network
