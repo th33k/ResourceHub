@@ -8,7 +8,7 @@ dependencies-toml-version = "2"
 distribution-version = "2201.10.3"
 
 [[package]]
-org = "FiveStackDev"
+org = "FiveStack"
 name = "ResourceHub"
 version = "0.1.0"
 dependencies = [
@@ -21,11 +21,12 @@ dependencies = [
 	{org = "ballerina", name = "sql"},
 	{org = "ballerina", name = "time"},
 	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "mysql"}
+	{org = "ballerinax", name = "mysql"},
+	{org = "ballerinax", name = "mysql.driver"}
 ]
 modules = [
-	{org = "FiveStackDev", packageName = "ResourceHub", moduleName = "ResourceHub"},
-	{org = "FiveStackDev", packageName = "ResourceHub", moduleName = "ResourceHub.services"}
+	{org = "FiveStack", packageName = "ResourceHub", moduleName = "ResourceHub"},
+	{org = "FiveStack", packageName = "ResourceHub", moduleName = "ResourceHub.resourcehubservices"}
 ]
 
 [[package]]
@@ -368,5 +369,13 @@ dependencies = [
 ]
 modules = [
 	{org = "ballerinax", packageName = "mysql", moduleName = "mysql"}
+]
+
+[[package]]
+org = "ballerinax"
+name = "mysql.driver"
+version = "1.7.0"
+modules = [
+	{org = "ballerinax", packageName = "mysql.driver", moduleName = "mysql.driver"}
 ]
 

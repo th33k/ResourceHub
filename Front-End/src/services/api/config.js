@@ -1,6 +1,6 @@
 // API base URL for all microservices
 const BASE_URL =
-  'https://4f2de039-e4b3-45c1-93e2-4873c5ea1a8e-dev.e1-us-east-azure.choreoapis.dev/resource-hub/ballerina';
+  "https://4f2de039-e4b3-45c1-93e2-4873c5ea1a8e-dev.e1-us-east-azure.choreoapis.dev/devresourcehub/backend";
 
 // Service-specific base URLs
 export const BASE_URLS = {
@@ -9,12 +9,14 @@ export const BASE_URLS = {
   asset: `${BASE_URL}/asset-e99/v1.0`,
   user: `${BASE_URL}/user-294/v1.0`,
   assetRequest: `${BASE_URL}/assetrequest-9fc/v1.0`,
-  calendar: `${BASE_URL}/calander-7e9/v1.0`,
+  calendar: `${BASE_URL}/calendar-7e9/v1.0`,
   mealtime: `${BASE_URL}/mealtime-481/v1.0`,
   mealtype: `${BASE_URL}/mealtype-899/v1.0`,
   settings: `${BASE_URL}/settings-e6f/v1.0`,
   dashboardAdmin: `${BASE_URL}/dashboard-admin-b74/v1.0`,
   dashboardUser: `${BASE_URL}/dashboard-user-033/v1.0`,
+  orgsettings: `${BASE_URL}/orgsettings-433/v1.0`,
+  report: `${BASE_URL}/schedulereports-a9e/v1.0`,
 
   // For local development
   // login: "http://localhost:9090/auth",
@@ -28,4 +30,6 @@ export const BASE_URLS = {
   // settings: "http://localhost:9090/settings",
   // dashboardAdmin: "http://localhost:9090/dashboard/admin",
   // dashboardUser: "http://localhost:9090/dashboard/user",
+  // orgsettings: "http://localhost:9090/orgsettings",
+  // report: "http://localhost:9090/schedulereports",
 };

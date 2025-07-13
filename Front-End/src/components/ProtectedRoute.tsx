@@ -11,16 +11,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole,
   children,
 }) => {
-  const { userData, refreshUserData } = useUser();
+  const { userData, refreshUserData, loading } = useUser();
   const location = useLocation();
+
 
   // Refresh user data on mount to ensure we have the latest
   useEffect(() => {
     refreshUserData();
-  }, [refreshUserData]);
+    // eslint-disable-next-line
+  }, []);
 
-  // Check if user is authenticated
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+
+
+
+  // Check if user is authenticated by presence of userData and token
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token && !!userData && !!userData.role;
+
+  if (loading) {
+    // Optionally, show a spinner or null while loading
+    return <div style={{textAlign: 'center', marginTop: '2rem'}}>Loading...</div>;
+  }
 
   if (!isAuthenticated) {
     // Redirect to login if not authenticated
@@ -28,7 +39,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Normalize roles for case-insensitive comparison
-  const userRole = userData.role.toLowerCase();
+  const userRole = userData.role?.toLowerCase?.() || '';
   const requiredRoleLower = requiredRole.toLowerCase();
 
   // Admins can access both admin and user routes
@@ -49,6 +60,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       replace
     />
   );
-};
+}
 
 export default ProtectedRoute;

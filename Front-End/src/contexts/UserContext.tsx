@@ -25,12 +25,13 @@ interface UserContextType {
   userData: UserData;
   refreshUserData: () => void;
   isAdminView: boolean;
+  loading: boolean;
 }
 
 // Default fallback user
 const defaultUser: UserData = {
   name: 'Guest User',
-  role: localStorage.getItem('userRole') || '',
+  role: '',
   avatar: 'GU',
 };
 
@@ -40,9 +41,32 @@ const UserContext = createContext<UserContextType>({
   userData: defaultUser,
   refreshUserData: () => {},
   isAdminView: false,
+  loading: true,
 });
 
 export const useUser = () => useContext(UserContext);
+
+
+// Helper to decode base64url (JWT) payloads
+function base64UrlDecode(str: string) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) {
+    str += '=';
+  }
+  return atob(str);
+}
+
+export function decodeToken() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) throw new Error('Malformed token');
+    return JSON.parse(base64UrlDecode(payload));
+  } catch {
+    return null;
+  }
+}
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -50,46 +74,63 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Initialize role immediately to avoid role flicker on refresh
-  const storedRole = localStorage.getItem('userRole') || 'User';
-  const storedUserId = localStorage.getItem('Userid');
 
-  const [userData, setUserData] = useState<UserData>({
-    ...defaultUser,
-    role: storedRole,
-  });
+  // User data state
+  const [userData, setUserData] = useState<UserData>(defaultUser);
+  const [loading, setLoading] = useState(true);
 
+  // Update userData reactively when token changes
+  useEffect(() => {
+    setLoading(true);
+    const decoded = decodeToken();
+    setUserData({
+      ...defaultUser,
+      name: decoded?.username || defaultUser.name,
+      role: decoded?.role || defaultUser.role,
+      avatar: decoded?.username?.charAt(0).toUpperCase() || defaultUser.avatar,
+      email: decoded?.email || '',
+      profilePicture: decoded?.profile_picture || '',
+    });
+    setLoading(false);
+  }, [localStorage.getItem('token')]);
+
+
+  // Optionally, fetch extra info from API if needed
   const fetchUserData = useCallback(async () => {
-    if (!storedUserId) {
+    setLoading(true);
+    const decoded = decodeToken();
+    if (!decoded?.id) {
       setUserData(defaultUser);
+      setLoading(false);
       return;
     }
-
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${BASE_URLS.settings}/details/${storedUserId}`,
+        `${BASE_URLS.settings}/details/${decoded.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
       const [profile] = response.data;
-
-      const name = profile.username || 'User';
-      const email = profile.email || '';
-      const avatar = name.charAt(0).toUpperCase();
-      const role = localStorage.getItem('userRole') || 'User';
-      const profilePicture = profile.profile_picture_url || '';
-
       setUserData((prev) => ({
         ...prev,
-        name,
-        avatar,
-        role,
-        email,
-        profilePicture,
+        name: profile.username || prev.name,
+        email: profile.email || prev.email,
+        profilePicture: profile.profile_picture_url || prev.profilePicture,
       }));
     } catch (error) {
-      console.error('Failed to fetch user data:', error);
+      // If error (e.g., invalid/expired token), clear token and user data
+      localStorage.removeItem('token');
       setUserData(defaultUser);
+    } finally {
+      setLoading(false);
     }
-  }, [storedUserId]);
+  }, []);
+
 
   const refreshUserData = useCallback(() => {
     fetchUserData();
@@ -100,7 +141,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [refreshUserData]);
 
   const isUserAdmin = useMemo(
-    () => userData.role.toLowerCase() === 'admin',
+    () => userData.role?.toLowerCase() === 'admin',
     [userData.role],
   );
 
@@ -120,8 +161,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       userData,
       refreshUserData,
       isAdminView,
+      loading,
     }),
-    [isUserAdmin, toggleAdminMode, userData, refreshUserData, isAdminView],
+    [isUserAdmin, toggleAdminMode, userData, refreshUserData, isAdminView, loading],
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

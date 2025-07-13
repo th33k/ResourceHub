@@ -7,7 +7,7 @@ import { decodeToken, useUser } from '../../contexts/UserContext';
 import { BASE_URLS } from '../../services/api/config';
 import './Styles/VerifyPopup.css';
 
-function VerificationPopup({ onClose, email, code }) {
+function OrgVerificationPopup({ onClose, email, code }) {
   // Local state to hold the user-entered verification code
   const [inputcode, setInputCode] = useState('');
   const { userData } = useUser();
@@ -29,7 +29,7 @@ function VerificationPopup({ onClose, email, code }) {
 
         // Send verified email update to the server with Authorization header
         await axios.put(
-          `${BASE_URLS.settings}/email/${userId}`,
+          `${BASE_URLS.orgsettings}/email/1`,
           { email },
           {
             headers: {
@@ -86,4 +86,4 @@ function VerificationPopup({ onClose, email, code }) {
   );
 }
 
-export default VerificationPopup;
+export default OrgVerificationPopup;

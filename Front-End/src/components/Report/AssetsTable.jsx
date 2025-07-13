@@ -1,5 +1,8 @@
+import { getAuthHeader } from '../../utils/authHeader';
 import React, { useEffect, useState } from 'react';
-import {
+import SchedulePopup from './SchedulePopup';
+import { decodeToken } from '../../contexts/UserContext';
+import{
   Chip,
   Table,
   TableBody,
@@ -9,6 +12,12 @@ import {
   TableRow,
   Paper,
   Button,
+  TextField,
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
 import html2pdf from 'html2pdf.js';
 import { BASE_URLS } from '../../services/api/config';
@@ -17,10 +26,51 @@ import { toast } from 'react-toastify';
 // Component to display meal events table
 const AssetsTable = () => {
   const [Assets, setassets] = useState([]);
+  // Removed date range filter
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [conditionFilter, setConditionFilter] = useState('All');
+  const [openSchedulePopup, setOpenSchedulePopup] = useState(false);
+  const [selectedFrequency, setSelectedFrequency] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, frequency: '' });
+  // Handle frequency selection from SchedulePopup
+  const handleFrequencySelect = (frequency) => {
+    setSelectedFrequency(frequency);
+    setConfirmDialog({ open: true, frequency });
+  };
+
+  // Handle confirmation of scheduling
+  const handleConfirmSchedule = async () => {
+    setConfirmDialog({ open: false, frequency: '' });
+    try {
+      const decoded = decodeToken();
+      const userId = decoded?.id;
+      if (!userId) throw new Error('User ID not found');
+      const endpoint = `${BASE_URLS.report}/addscedulereport`;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({ user_id: userId, report_name: 'asset', frequency: selectedFrequency }),
+      });
+      if (!res.ok) throw new Error('Failed to schedule report');
+      toast.success('Asset report scheduled successfully!');
+    } catch (err) {
+      toast.error('Failed to schedule asset report.');
+    }
+    setOpenSchedulePopup(false);
+    setSelectedFrequency('');
+  };
 
   // Fetch data from the API
   useEffect(() => {
-    fetch(`${BASE_URLS.asset}/details`)
+    fetch(`${BASE_URLS.asset}/details`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    })
       .then((response) => response.json())
       .then((data) => setassets(data))
       .catch((error) => console.error('Error fetching meal events:', error));
@@ -44,74 +94,210 @@ const AssetsTable = () => {
     }
   };
 
-  if (!Array.isArray(Assets) || Assets.length === 0) {
+
+  // Get unique categories and condition types for filters
+  const categoryOptions = ['All', ...Array.from(new Set(Assets.map(a => a.category).filter(Boolean)))];
+  const conditionOptions = ['All', ...Array.from(new Set(Assets.map(a => a.condition_type).filter(Boolean)))];
+
+  // Filtered data by category and condition type only
+  const filteredAssets = Assets.filter((asset) => {
+    const categoryMatch = categoryFilter === 'All' || asset.category === categoryFilter;
+    const conditionMatch = conditionFilter === 'All' || asset.condition_type === conditionFilter;
+    return categoryMatch && conditionMatch;
+  });
+
+  if (!Array.isArray(filteredAssets) || filteredAssets.length === 0) {
+    const isPopupOpen = openSchedulePopup || confirmDialog.open;
     return (
-      <TableContainer component={Paper} id="asset-table">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Asset Name</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Quantity</TableCell>
-              <TableCell>Condition Type</TableCell>
-              <TableCell>Location</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={5}>No data available.</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box position="relative">
+        {/* Blur wrapper */}
+        <div className={isPopupOpen ? 'blurred-content' : ''}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                label="Category"
+              >
+                {categoryOptions.map(option => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Condition</InputLabel>
+              <Select
+                value={conditionFilter}
+                onChange={e => setConditionFilter(e.target.value)}
+                label="Condition"
+              >
+                {conditionOptions.map(option => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          <TableContainer component={Paper} id="asset-table">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Asset Name</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Quantity</TableCell>
+                  <TableCell>Condition Type</TableCell>
+                  <TableCell>Location</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={5}>No data available.</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+        {/* Popups rendered as before */}
+        {openSchedulePopup && (
+          <SchedulePopup
+            onClose={() => setOpenSchedulePopup(false)}
+            table="Asset"
+            onFrequencySelect={handleFrequencySelect}
+          />
+        )}
+        {confirmDialog.open && (
+          <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ bgcolor: 'background.paper', p: 4, borderRadius: 2, minWidth: 300 }}>
+              <p>Are you sure you want to schedule the Asset report as <b>{confirmDialog.frequency}</b>?</p>
+              <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'flex-end' }}>
+                <Button variant="contained" color="primary" onClick={handleConfirmSchedule}>Confirm</Button>
+                <Button variant="outlined" onClick={() => setConfirmDialog({ open: false, frequency: '' })}>Cancel</Button>
+              </Box>
+            </Box>
+          </Box>
+        )}
+        {/* Blur effect style */}
+        <style>{`
+          .blurred-content {
+            filter: blur(6px);
+            pointer-events: none;
+            user-select: none;
+            transition: filter 0.2s;
+          }
+        `}</style>
+      </Box>
     );
   }
 
+  const isPopupOpen = openSchedulePopup || confirmDialog.open;
   return (
-    <div>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleDownloadPDF}
-        style={{ marginBottom: 20, float: 'right' }}
-      >
-        Download PDF
-      </Button>
-
-      {/* Table Container */}
-      <TableContainer component={Paper} id="asset-table">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Asset ID</TableCell>
-              <TableCell>Asset Name</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Quantity</TableCell>
-              <TableCell>Condition Type</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Availability</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Assets &&
-              Assets.map((Assets, index) => (
-                <TableRow key={index}>
-                  <TableCell>{Assets.asset_id}</TableCell>
-                  <TableCell>{Assets.asset_name}</TableCell>
-                  <TableCell>{Assets.category}</TableCell>
-                  <TableCell>{Assets.quantity}</TableCell>
-                  <TableCell>{Assets.condition_type}</TableCell>
-                  <TableCell>{Assets.location}</TableCell>
-                  <TableCell>
-                    {' '}
-                    {Assets.is_available ? 'Available' : 'Not Available'}
-                  </TableCell>
-                </TableRow>
+    <Box position="relative">
+      {/* Blur wrapper */}
+      <div className={isPopupOpen ? 'blurred-content' : ''}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              label="Category"
+            >
+              {categoryOptions.map(option => (
+                <MenuItem key={option} value={option}>{option}</MenuItem>
               ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </div>
+            </Select>
+          </FormControl>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Condition</InputLabel>
+            <Select
+              value={conditionFilter}
+              onChange={e => setConditionFilter(e.target.value)}
+              label="Condition"
+            >
+              {conditionOptions.map(option => (
+                <MenuItem key={option} value={option}>{option}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleDownloadPDF}
+            sx={{ ml: 'auto' }}
+          >
+            Download PDF
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenSchedulePopup(true)}
+          >
+            Schedule PDF
+          </Button>
+        </Box>
+        {/* Table Container */}
+        <TableContainer component={Paper} id="asset-table">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Asset ID</TableCell>
+                <TableCell>Asset Name</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>Condition Type</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Availability</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredAssets &&
+                filteredAssets.map((Assets, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{Assets.asset_id}</TableCell>
+                    <TableCell>{Assets.asset_name}</TableCell>
+                    <TableCell>{Assets.category}</TableCell>
+                    <TableCell>{Assets.quantity}</TableCell>
+                    <TableCell>{Assets.condition_type}</TableCell>
+                    <TableCell>{Assets.location}</TableCell>
+                    <TableCell>
+                      {' '}
+                      {Assets.is_available ? 'Available' : 'Not Available'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+      {/* Popups rendered as before */}
+      {openSchedulePopup && (
+        <SchedulePopup
+          onClose={() => setOpenSchedulePopup(false)}
+          table="Asset"
+          onFrequencySelect={handleFrequencySelect}
+        />
+      )}
+      {confirmDialog.open && (
+        <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ bgcolor: 'background.paper', p: 4, borderRadius: 2, minWidth: 300 }}>
+            <p>Are you sure you want to schedule the Asset report as <b>{confirmDialog.frequency}</b>?</p>
+            <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'flex-end' }}>
+              <Button variant="contained" color="primary" onClick={handleConfirmSchedule}>Confirm</Button>
+              <Button variant="outlined" onClick={() => setConfirmDialog({ open: false, frequency: '' })}>Cancel</Button>
+            </Box>
+          </Box>
+        </Box>
+      )}
+      {/* Blur effect style */}
+      <style>{`
+        .blurred-content {
+          filter: blur(6px);
+          pointer-events: none;
+          user-select: none;
+          transition: filter 0.2s;
+        }
+      `}</style>
+    </Box>
   );
 };
 
