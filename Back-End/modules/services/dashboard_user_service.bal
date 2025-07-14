@@ -1,7 +1,7 @@
-import ballerina/io;
 import ballerina/http;
-import ballerina/time;
+import ballerina/io;
 import ballerina/sql;
+import ballerina/time;
 
 // Dashboard User Service to handle user dashboard data
 @http:ServiceConfig {
@@ -116,7 +116,7 @@ service /dashboard/user on ln {
                 // Convert time:Date to string (e.g., "2025-05-02T00:00:00Z")
                 string dateStr = meal.meal_request_date.year.toString() + "-" +
                                 meal.meal_request_date.month.toString().padStart(2, "0") + "-" +
-                                meal.meal_request_date.day.toString().padStart(2, "0") ;
+                                meal.meal_request_date.day.toString().padStart(2, "0");
                 activities.push({
                     "id": meal.requestedmeal_id,
                     "type": "meal",
@@ -143,7 +143,7 @@ service /dashboard/user on ln {
                 // Convert time:Date to string
                 string dateStr = maintenance.submitted_date.year.toString() + "-" +
                                 maintenance.submitted_date.month.toString().padStart(2, "0") + "-" +
-                                maintenance.submitted_date.day.toString().padStart(2, "0") ;
+                                maintenance.submitted_date.day.toString().padStart(2, "0");
                 activities.push({
                     "id": maintenance.maintenance_id,
                     "type": "maintenance",
@@ -171,7 +171,7 @@ service /dashboard/user on ln {
                 // Convert time:Date to string
                 string dateStr = asset.submitted_date.year.toString() + "-" +
                                 asset.submitted_date.month.toString().padStart(2, "0") + "-" +
-                                asset.submitted_date.day.toString().padStart(2, "0") ;
+                                asset.submitted_date.day.toString().padStart(2, "0");
                 activities.push({
                     "id": asset.requestedasset_id,
                     "type": "asset",
@@ -185,7 +185,7 @@ service /dashboard/user on ln {
     }
 
     // Get quick actions available for the user
-   
+
     resource function options .() returns http:Ok {
         return http:OK;
     }

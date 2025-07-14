@@ -1,9 +1,9 @@
+import ballerina/email;
 import ballerina/http;
 import ballerina/sql;
-import ballerina/email;
 
 // Profile data structure for user settings
-public type Profile record {| 
+public type Profile record {|
     string username;
     string profile_picture_url;
     string bio?;
@@ -13,18 +13,18 @@ public type Profile record {|
 |};
 
 // Structure to carry email and verification code
-public type Email record {| 
+public type Email record {|
     string email;
     int code?;
 |};
 
 // Structure for phone number update
-public type Phone record {| 
+public type Phone record {|
     string phone_number;
 |};
 
 // Structure for password update request
-public type Password record {| 
+public type Password record {|
     string current_password;
     string new_password;
 |};
@@ -135,12 +135,12 @@ If you didn’t request this, you can safely ignore this message.
     // Update password after validating current password
     resource function PUT password/[int userid](@http:Payload Password password) returns json|error {
         // Fetch the current password for validation
-        stream<record {| string password; |}, sql:Error?> result = dbClient->query(`
+        stream<record {|string password;|}, sql:Error?> result = dbClient->query(`
             SELECT password FROM users WHERE user_id = ${userid}
         `);
 
         string? storedPassword = null;
-        check result.forEach(function(record {| string password; |} rec) {
+        check result.forEach(function(record {|string password;|} rec) {
             storedPassword = rec.password;
         });
 

@@ -1,14 +1,13 @@
-import ballerina/http;
-import ballerina/jwt;
-import ballerina/io;
-import ballerina/sql;
-import ballerina/random;
 import ballerina/email;
+import ballerina/http;
+import ballerina/io;
+import ballerina/jwt;
+import ballerina/random;
+import ballerina/sql;
 
 type ForgotPassword record {
     string email;
 };
-
 
 // JWT issuer configuration
 jwt:IssuerConfig jwtIssuerConfig = {
@@ -20,7 +19,7 @@ jwt:IssuerConfig jwtIssuerConfig = {
             keyFile: "certificate.key"
         }
     },
-    expTime: 3600 
+    expTime: 3600
 };
 
 // JWT validator configuration
@@ -57,9 +56,9 @@ function generateSimplePassword(int length) returns string|error {
 service /auth on ln {
 
     resource function post login(@http:Payload record {string email; string password;} credentials) returns json|error {
-        
+
         sql:ParameterizedQuery query = `SELECT username,user_id, email, password, usertype , profile_picture_url FROM users WHERE email = ${credentials.email}`;
-        record {|string username;int user_id;string email; string password; string usertype;string profile_picture_url;|}|sql:Error result = dbClient->queryRow(query);
+        record {|string username; int user_id; string email; string password; string usertype; string profile_picture_url;|}|sql:Error result = dbClient->queryRow(query);
 
         if (result is sql:Error) {
             if (result is sql:NoRowsError) {
@@ -80,7 +79,7 @@ service /auth on ln {
             config.customClaims = {"profile_picture": result.profile_picture_url};
             string token = check jwt:issue(config);
 
-            return {token: token, usertype: result.usertype , username: result.username,id: result.user_id, email: result.email , profile_picture_url: result.profile_picture_url};
+            return {token: token, usertype: result.usertype, username: result.username, id: result.user_id, email: result.email, profile_picture_url: result.profile_picture_url};
         } else {
             io:println("Invalid password for user: " + credentials.email);
             return error("Invalid password");
@@ -89,7 +88,7 @@ service /auth on ln {
 
     resource function get protected(http:Request req) returns string|error {
         io:println("Accessing protected resource");
-        
+
         string|error authHeader = req.getHeader("Authorization");
         if (authHeader is error) {
             io:println("Authorization header not found");
@@ -97,7 +96,7 @@ service /auth on ln {
         }
 
         string token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-        
+
         jwt:Payload|error payload = check jwt:validate(token, jwtValidatorConfig);
         if (payload is jwt:Payload) {
             io:println("Protected data accessed successfully");
@@ -109,41 +108,41 @@ service /auth on ln {
     }
 
     resource function post resetpassword(@http:Payload ForgotPassword password) returns json|error {
-    // Validate email format (basic check)
-    if !password.email.includes("@") || !password.email.includes(".") {
-        return error("Invalid email format", statusCode = 400);
-    }
+        // Validate email format (basic check)
+        if !password.email.includes("@") || !password.email.includes(".") {
+            return error("Invalid email format", statusCode = 400);
+        }
 
-    // Generate simple random password
-    string randomPassword = check generateSimplePassword(8);
+        // Generate simple random password
+        string randomPassword = check generateSimplePassword(8);
 
-    // Update password in database
-    sql:ParameterizedQuery updateQuery = `UPDATE users SET password = ${randomPassword} 
+        // Update password in database
+        sql:ParameterizedQuery updateQuery = `UPDATE users SET password = ${randomPassword} 
                                         WHERE email = ${password.email}`;
-    sql:ExecutionResult updateResult = check dbClient->execute(updateQuery);
+        sql:ExecutionResult updateResult = check dbClient->execute(updateQuery);
 
-    if updateResult.affectedRowCount == 0 {
-        return error("Failed to reset password", statusCode = 500);
-    }
+        if updateResult.affectedRowCount == 0 {
+            return error("Failed to reset password", statusCode = 500);
+        }
 
-    // Send email
-    email:Message resetEmail = {
-        to: [password.email],
-        subject: "Your Account Password Reset",
-        body: string `Your temporary password is: ${randomPassword}
+        // Send email
+        email:Message resetEmail = {
+            to: [password.email],
+            subject: "Your Account Password Reset",
+            body: string `Your temporary password is: ${randomPassword}
                      Please change your password after logging in.
                      Login here: http://localhost:5173/login`
-    };
+        };
 
-    error? emailResult = emailClient->sendMessage(resetEmail);
-    if emailResult is error {
-        io:println("Error sending password email: ", emailResult.message());
-        // Don't fail the request if email fails, but log it
+        error? emailResult = emailClient->sendMessage(resetEmail);
+        if emailResult is error {
+            io:println("Error sending password email: ", emailResult.message());
+            // Don't fail the request if email fails, but log it
+        }
+
+        return {
+            message: "Password reset successful. Check your email for the temporary password."
+        };
     }
 
-    return {
-        message: "Password reset successful. Check your email for the temporary password."
-    };
-    }
-    
 }

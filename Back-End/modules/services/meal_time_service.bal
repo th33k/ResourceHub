@@ -1,9 +1,9 @@
 import ballerina/http;
-import ballerina/sql;
 import ballerina/io;
+import ballerina/sql;
 
 // Defines the structure of a MealTime object
-public type MealTime record {| 
+public type MealTime record {|
     int mealtime_id?;
     string mealtime_name;
     string mealtime_image_url;
@@ -19,13 +19,13 @@ public type MealTime record {|
 }
 
 // MealTime service with CRUD operations
-service /mealtime on ln{
+service /mealtime on ln {
 
     // Fetch all mealtime records
     resource function get details() returns MealTime[]|error {
-        stream<MealTime, sql:Error?> resultStream = 
+        stream<MealTime, sql:Error?> resultStream =
             dbClient->query(`SELECT mealtime_id,mealtime_name , mealtime_image_url FROM mealtimes`);
-        
+
         MealTime[] mealtimes = [];
         check resultStream.forEach(function(MealTime meal) {
             mealtimes.push(meal);

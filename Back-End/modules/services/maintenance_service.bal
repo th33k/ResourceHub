@@ -61,7 +61,7 @@ service /maintenance on ln {
 
     // POST: Add a new maintenance request
     resource function post add(@http:Payload Maintenance maintenance) returns json|error {
-        
+
         // Use parameterized query to prevent SQL injection
         sql:ExecutionResult result = check dbClient->execute(
             `INSERT INTO maintenance (name, user_id, description, priority_level, status, submitted_date)
@@ -108,26 +108,26 @@ service /maintenance on ln {
         return {"message": "Maintenance request has been updated "};
     }
 
-    resource function get notification() returns Notification[]|error{
-        stream< Notification ,sql:Error?> resultstream = dbClient->query(
+    resource function get notification() returns Notification[]|error {
+        stream<Notification, sql:Error?> resultstream = dbClient->query(
             `select m.submitted_date,u.username,m.description,m.priority_level AS priorityLevel,m.status,m.name
             from notification n
             join users u on n.user_id=u.user_id
             join maintenance m on n.maintenance_id=m.maintenance_id`
             );
-            Notification[] notifications =[];
-            check resultstream.forEach(function(Notification notification){
-                notifications.push(notification);
-            });
-            return notifications;
+        Notification[] notifications = [];
+        check resultstream.forEach(function(Notification notification) {
+            notifications.push(notification);
+        });
+        return notifications;
     }
 
-    resource function post addnotification(@http:Payload Notification notification) returns json|error{
+    resource function post addnotification(@http:Payload Notification notification) returns json|error {
         sql:ExecutionResult result = check dbClient->execute(`
         insert into notification (user_id,maintenance_id)
         values(${notification.user_id},${notification.maintenance_id})`
         );
-         if (result.affectedRowCount == 0) {
+        if (result.affectedRowCount == 0) {
             return error("Failed to add notification");
         }
 

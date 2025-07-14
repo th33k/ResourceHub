@@ -7,7 +7,7 @@ public type AssetRequest record {|
     int user_id;
     int asset_id;
     string category?;
-    string submitted_date ;
+    string submitted_date;
     string handover_date;
     int remaining_days?;
     int quantity;
@@ -91,7 +91,7 @@ service /assetrequest on ln {
 
         sql:ExecutionResult result = check dbClient->execute(`
             INSERT INTO requestedassets (user_id, asset_id, submitted_date , handover_date, quantity,is_returning)
-            VALUES (${assetrequest.user_id}, ${assetrequest.asset_id}, ${assetrequest.submitted_date }, ${assetrequest.handover_date}, ${assetrequest.quantity},${assetrequest.is_returning})
+            VALUES (${assetrequest.user_id}, ${assetrequest.asset_id}, ${assetrequest.submitted_date}, ${assetrequest.handover_date}, ${assetrequest.quantity},${assetrequest.is_returning})
         `);
 
         if result.affectedRowCount == 0 {
@@ -137,6 +137,7 @@ service /assetrequest on ln {
             assetrequest: assetrequest
         };
     }
+
     resource function get dueassets() returns AssetRequest[]|error {
         stream<AssetRequest, sql:Error?> resultstream = dbClient->query
         (`SELECT 

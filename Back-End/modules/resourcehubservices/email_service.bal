@@ -1,9 +1,7 @@
+import ballerina/email;
 import ballerina/http;
 import ballerina/io;
-import ballerina/email;
 import ballerina/mime;
-
-
 
 configurable string SMTP_HOST = ?;
 configurable string SMTP_USER = ?;
@@ -18,11 +16,11 @@ service /report on ln {
 
         // Generate HTML content
         string htmlContent = "<!DOCTYPE html>\n<html>\n<head>\n" +
-                           "<title>Meal Events Report</title>\n" +
-                           "<style>table { border-collapse: collapse; width: 100%; }" +
-                           "th, td { border: 1px solid black; padding: 8px; text-align: left; }" +
-                           "th { background-color: #f2f2f2; }</style>\n" +
-                           "</head>\n<body>\n<h1>Report</h1>\n<table>\n";
+                            "<title>Meal Events Report</title>\n" +
+                            "<style>table { border-collapse: collapse; width: 100%; }" +
+                            "th, td { border: 1px solid black; padding: 8px; text-align: left; }" +
+                            "th { background-color: #f2f2f2; }</style>\n" +
+                            "</head>\n<body>\n<h1>Report</h1>\n<table>\n";
 
         json[] events = <json[]>bookData;
         if events.length() == 0 {
@@ -63,9 +61,9 @@ service /report on ln {
             "/v3/convert/pdf",
             pdfRequest,
             headers = {
-                "Authorization": "Basic " + ("api:" + PDFSHIFT_API_KEY).toBytes().toBase64(), // Replace with your API key
-                "Content-Type": "application/json"
-            }
+            "Authorization": "Basic " + ("api:" + PDFSHIFT_API_KEY).toBytes().toBase64(), // Replace with your API key
+            "Content-Type": "application/json"
+        }
         );
 
         byte[] pdfBytes = check pdfResponse.getBinaryPayload();
@@ -86,7 +84,7 @@ service /report on ln {
         check emailClient->sendMessage(emailMessage);
 
         http:Response response = new;
-        response.setPayload("Report has been sented sucessfully" );
+        response.setPayload("Report has been sented sucessfully");
         check caller->respond(response);
     }
 }
