@@ -1,7 +1,9 @@
 import { getAuthHeader } from '../utils/authHeader';
 
 import React, { useState, useEffect } from 'react';
-import { MaintenanceNotificationCard } from '../components/Maintenance/MaintenanceNotificationCard';
+import { NotificationCard } from '../components/Notification/NotificationCard';
+import NotificationPopup from '../components/Notification/NotificationPopup';
+import { markNotificationRead, deleteNotification } from '../utils/notificationApi';
 import AdminLayout from '../layouts/Admin/AdminLayout';
 import UserLayout from '../layouts/User/UserLayout'; // Adjust path as needed
 import { BASE_URLS } from '../services/api/config';
@@ -11,42 +13,79 @@ import { useUser } from '../contexts/UserContext';
 function Notification() {
   const [notifications, setNotifications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 7;
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   // Fetch notifications from the API
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await fetch(
-          `${BASE_URLS.maintenance}/notification`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeader(),
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error(`Failed to fetch notifications: ${response.status}`);
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(
+        `${BASE_URLS.notification}/notification`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+          },
         }
-        const data = await response.json();
-        // Map API data to match card props
-        const mappedData = data.map((item) => ({
-          ...item,
-          name: item.username,
-          date: item.submitted_date,
-          priorityLevel: item.priorityLevel,
-        }));
-        setNotifications(mappedData);
-        toast.success('Notifications loaded successfully!');
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-        toast.error('Error fetching notifications:', error);
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notifications: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      // Map API data to match card props
+      const mappedData = data.map((item) => ({
+        ...item,
+        name: item.username,
+        date: item.submitted_date,
+        priorityLevel: item.priorityLevel,
+      }));
+      setNotifications(mappedData);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      toast.error('Error fetching notifications:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Handle opening popup
+  const handleOpenPopup = (notification) => {
+    setSelectedNotification(notification);
+    setPopupOpen(true);
+  };
+
+  // Handle closing popup
+  const handleClosePopup = () => {
+    setPopupOpen(false);
+    setSelectedNotification(null);
+  };
+
+  // Mark as read
+  const handleMarkRead = async (notification_id) => {
+    try {
+      await markNotificationRead(notification_id);
+      toast.success('Notification marked as read');
+      fetchNotifications();
+      handleClosePopup();
+    } catch (error) {
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  // Delete notification
+  const handleDelete = async (notification_id) => {
+    try {
+      await deleteNotification(notification_id);
+      toast.success('Notification deleted');
+      fetchNotifications();
+      handleClosePopup();
+    } catch (error) {
+      toast.error('Failed to delete notification');
+    }
+  };
 
   // Pagination logic
   const totalPages = Math.ceil(notifications.length / itemsPerPage);
@@ -70,15 +109,21 @@ function Notification() {
   const renderContent = (
     <section className="relative flex flex-col justify-start overflow-hidden antialiased">
       <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-6">
-        <h2 className="text-xl font-bold mb-6">Maintenance Notifications</h2>
+        <h2 className="text-xl font-bold mb-6">Notifications</h2>
         <div className="space-y-4">
           {paginatedNotifications.map((notification, index) => (
-            <MaintenanceNotificationCard
-              key={index}
-              notification={notification}
-            />
+            <div key={index} onClick={() => handleOpenPopup(notification)} style={{ cursor: 'pointer' }}>
+              <NotificationCard notification={notification} />
+            </div>
           ))}
         </div>
+        <NotificationPopup
+          open={popupOpen}
+          onClose={handleClosePopup}
+          notification={selectedNotification}
+          onMarkRead={handleMarkRead}
+          onDelete={handleDelete}
+        />
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
@@ -129,7 +174,7 @@ function Notification() {
 
   return (
     <>
-      {userRole == 'Admin' ? (
+      {userRole == 'Admin' || userRole == 'SuperAdmin' ? (
         <AdminLayout>{renderContent}</AdminLayout>
       ) : userRole == 'User' ? (
         <UserLayout>{renderContent}</UserLayout>

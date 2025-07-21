@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './Styles/ProfileSection.css';
+import { toast } from 'react-toastify';
+import { Building, Upload, MapPin, Mail, Save, Image } from 'lucide-react';
 import { BASE_URLS } from '../../services/api/config';
 import { getAuthHeader } from '../../utils/authHeader';
-import ConfirmationDialog from './ConfirmationDialog';
-import { toast } from 'react-toastify';
-import { useUser } from '../../contexts/UserContext';
-import { decodeToken } from '../../contexts/UserContext';
+import { useUser, decodeToken } from '../../contexts/UserContext';
+import { useThemeStyles } from '../../hooks/useThemeStyles';
 import VerificationPopup from './OrgVerificationPopup';
+import ConfirmationDialog from './ConfirmationDialog';
+import './Styles/SettingsComponents.css';
 
 const OrganizationSection = () => {
   // State to store form data
@@ -16,6 +17,9 @@ const OrganizationSection = () => {
   const [openVerifyPopup, setOpenVerifyPopup] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [code, setCode] = useState('');
+  // State for file upload functionality
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   // Loading and error states for async data fetching
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,30 +31,39 @@ const OrganizationSection = () => {
     onConfirm: null,
   });
 
-
   // Get user id from context
   const { userData } = useUser();
+  const { updateCSSVariables } = useThemeStyles();
+
+  // Apply theme variables when component mounts
+  React.useEffect(() => {
+    updateCSSVariables();
+  }, [updateCSSVariables]);
   // Fallback: decode token directly if userData.id is undefined
   let userId = userData.id;
+  let orgId = null;
   if (!userId) {
     const decoded = decodeToken();
     userId = decoded?.id;
-    console.log('ProfileSettings fallback decoded userId:', userId);
+    orgId = decoded?.org_id;
+    console.log('ProfileSettings fallback decoded userId:', userId, 'orgId:', orgId);
   } else {
-    console.log('ProfileSettings userId:', userId);
+    const decoded = decodeToken();
+    orgId = decoded?.org_id;
+    console.log('ProfileSettings userId:', userId, 'orgId:', orgId);
   }
 
   // Fetch user profile data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (!userId) {
-          setError('User ID not found. Please log in again.');
+        if (!userId || !orgId) {
+          setError('User or Organization ID not found. Please log in again.');
           setLoading(false);
           return;
         }
         const { data } = await axios.get(
-          `${BASE_URLS.orgsettings}/details/1`,
+          `${BASE_URLS.orgsettings}/details/${orgId}`,
           {
             headers: {
               ...getAuthHeader(),
@@ -71,7 +84,7 @@ const OrganizationSection = () => {
       }
     };
     fetchUserData();
-  }, [userId]);
+  }, [userId, orgId]);
 
   // Handle changes in form inputs
   const handleChange = (e) => {
@@ -82,6 +95,48 @@ const OrganizationSection = () => {
     if (name === 'bio') key = 'org_address';
     if (name === 'email') key = 'org_email';
     setFormData({ ...formData, [key]: value });
+  };
+
+  // Handle file selection and create preview URL
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const fileURL = URL.createObjectURL(file); // Preview image
+      setFormData({ ...formData, org_logo: fileURL });
+    }
+  };
+
+  // Upload selected image to Cloudinary and return URL
+  const uploadImageToCloudinary = async () => {
+    if (!imageFile) {
+      return formData.org_logo; // Return existing URL if no new file
+    }
+
+    setUploading(true);
+    const formData_upload = new FormData();
+    formData_upload.append('file', imageFile);
+    formData_upload.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    formData_upload.append('cloud_name', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+
+    try {
+      const response = await fetch(
+        import.meta.env.VITE_CLOUDINARY_API_URL,
+        {
+          method: 'POST',
+          body: formData_upload,
+        },
+      );
+
+      const data = await response.json();
+      setUploading(false);
+      return data.secure_url; // Return uploaded image URL
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setUploading(false);
+      toast.error('Image upload failed. Please try again.');
+      return null;
+    }
   };
 
   // Handle form submission with confirmation dialog
@@ -101,12 +156,17 @@ const OrganizationSection = () => {
         try {
           // Use fallback userId (from context or decoded token)
           if (!userId) throw new Error('User ID not found');
+          
+          // Upload image if file is selected
+          const imageUrl = await uploadImageToCloudinary();
+          if (imageFile && !imageUrl) return; // Stop if upload failed
+          
           // Send profile update request
           await axios.put(
-            `${BASE_URLS.orgsettings}/profile/1`,
+            `${BASE_URLS.orgsettings}/profile/${orgId}`,
             {
               org_name: formData.org_name,
-              org_logo: formData.org_logo,
+              org_logo: imageUrl || formData.org_logo,
               org_address: formData.org_address,
             },
             {
@@ -115,6 +175,15 @@ const OrganizationSection = () => {
               },
             }
           );
+          
+          // Update formData with the uploaded URL
+          if (imageUrl) {
+            setFormData(prev => ({ ...prev, org_logo: imageUrl }));
+          }
+          
+          // Clear file selection after successful upload
+          setImageFile(null);
+          
           toast.success('Organization Profile updated successfully!');
           // Close dialog after successful update
           setConfirmationDialog({ open: false, message: '', onConfirm: null });
@@ -149,7 +218,7 @@ const OrganizationSection = () => {
       }
       if (!currentUserId) throw new Error('User ID not found');
       const { data } = await axios.get(
-        `${BASE_URLS.orgsettings}/details/1`,
+        `${BASE_URLS.orgsettings}/details/${orgId}`,
         {
           headers: {
             ...getAuthHeader(),
@@ -189,67 +258,116 @@ const OrganizationSection = () => {
   return (
     <div className="profile-section">
       <div className="header">
-        <h2>Organization</h2>
+        <Building size={32} style={{ marginBottom: '16px', color: 'var(--settings-accent-primary)' }} />
+        <h2>Organization Settings</h2>
+        <p style={{ color: 'var(--settings-popup-text-secondary)', textAlign: 'center', margin: '0 0 16px 0' }}>
+          Manage your organization profile and information
+        </p>
         {formData.org_logo && (
-          <img
-            src={formData.org_logo}
-            alt="Organization Logo"
-            onError={(e) => { e.target.style.display = 'none'; toast.error('Invalid image URL'); }}
-          />
+          <div style={{ marginTop: '10px' }}>
+            <img
+              src={formData.org_logo}
+              alt="Organization Logo"
+              style={{
+                maxWidth: '150px',
+                maxHeight: '150px',
+                objectFit: 'cover',
+                border: '4px solid var(--settings-accent-primary)',
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px rgba(147, 51, 234, 0.2)',
+              }}
+              onError={(e) => { 
+                e.target.style.display = 'none'; 
+                toast.error('Invalid image URL or failed to load image'); 
+              }}
+            />
+          </div>
         )}
       </div>
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-group">
-          <label>Organization Name</label>
+          <label>
+            <Building size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            Organization Name
+          </label>
           <input
             className="form-input"
             type="text"
             name="name"
             value={formData.org_name}
             onChange={handleChange}
+            placeholder="Enter organization name"
             required
           />
         </div>
         <div className="form-group">
-          <label>Organization Logo URL</label>
+          <label>
+            <Image size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            Organization Logo
+          </label>
+          <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Upload size={16} style={{ color: 'var(--settings-accent-primary)' }} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ flex: 1 }}
+            />
+          </div>
+          <label style={{ fontSize: '14px', color: 'var(--settings-popup-text-secondary)' }}>
+            Or enter logo URL directly:
+          </label>
           <input
             className="form-input"
             type="url"
             name="picture"
             value={formData.org_logo}
             onChange={handleChange}
+            placeholder="https://example.com/logo.jpg"
           />
         </div>
         <div className="form-group">
-          <label>Address</label>
+          <label>
+            <MapPin size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            Organization Address
+          </label>
           <textarea
             name="bio"
             value={formData.org_address}
             onChange={handleChange}
-            rows="3"
+            rows="4"
+            placeholder="Enter organization address..."
           />
         </div>
-        <button type="submit">Save Changes</button>
+        <button type="submit" disabled={uploading}>
+          <Save size={18} />
+          {uploading ? 'Uploading...' : 'Save Organization'}
+        </button>
       </form>
-      <br></br>
-         <hr></hr>
-         <br></br>
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.org_email}
-            onChange={handleChange}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => handleEmailSubmit(formData.org_email)}
-          >
-            Update Email
-          </button>
-        </div>
+      
+      <hr />
+      
+      <div className="form-group" style={{ marginTop: '24px' }}>
+        <label>
+          <Mail size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+          Organization Email
+        </label>
+        <input
+          type="email"
+          name="email"
+          value={formData.org_email}
+          onChange={handleChange}
+          placeholder="Enter organization email"
+          required
+        />
+        <button
+          type="button"
+          onClick={() => handleEmailSubmit(formData.org_email)}
+        >
+          <Save size={18} />
+          Update Email
+        </button>
+      </div>
 
 
         {openVerifyPopup && (

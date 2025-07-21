@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, Input, Button, Typography } from '@mui/material';
 import { X } from 'lucide-react';
 import '../Meal-CSS/AddMealPopup.css';
 import { BASE_URLS } from '../../../services/api/config';
 import { toast } from 'react-toastify';
 import { getAuthHeader } from '../../../utils/authHeader';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
 
 export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   // State for meal name input
@@ -15,6 +16,27 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   const [imageFile, setImageFile] = useState(null);
   // State to track upload progress
   const [uploading, setUploading] = useState(false);
+  
+  // Theme styles hook
+  const { updateCSSVariables } = useThemeStyles();
+  
+  // Update CSS variables when theme changes
+  useEffect(() => {
+    updateCSSVariables();
+  }, [updateCSSVariables]);
+
+  // Function to clear all form fields
+  const clearFields = () => {
+    setMealName('');
+    setMealImageUrl('');
+    setImageFile(null);
+  };
+
+  // Handle close and clear fields
+  const handleClose = () => {
+    clearFields();
+    onClose();
+  };
 
   // Handle selection of file input and create preview URL
   const handleFileChange = (e) => {
@@ -36,12 +58,12 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', imageFile);
-    formData.append('upload_preset', 'ResourceHub'); // Cloudinary preset
-    formData.append('cloud_name', 'dyjwjhekd'); // Cloudinary cloud name
+    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    formData.append('cloud_name', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
 
     try {
       const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dyjwjhekd/image/upload',
+        import.meta.env.VITE_CLOUDINARY_API_URL,
         {
           method: 'POST',
           body: formData,
@@ -80,8 +102,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           }),
         });
 
-        setMealName('');
-        setMealImageUrl('');
+
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -89,6 +110,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
 
         const result = await response.json();
         console.log('Server Response:', result);
+        clearFields(); // Clear fields after successful submission
         onClose();
         onSubmit(); // Refresh meal types list
       } catch (error) {
@@ -101,7 +123,18 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
+      fullWidth
+      BackdropProps={{
+        style: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)'
+        }
+      }}
+    >
       <div className="mealtime-popup-container">
         <div className="mealtime-popup-header">
           <div>
@@ -111,24 +144,12 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
             <p className="mealtime-subtitle">{subtitle}</p>
           </div>
           {/* Close button */}
-          <button onClick={onClose} className="mealtime-close-btn">
+          <button onClick={handleClose} className="mealtime-close-btn">
             <X size={20} />
           </button>
         </div>
 
-        <div className="mealtime-form">
-          <div className="mealtime-input-group">
-            <label className="mealtime-label">Meal Type Image</label>
-            {/* File input for image upload */}
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              fullWidth
-            />
-          </div>
-
-          {/* Show image preview if available */}
+                  {/* Show image preview if available */}
           {mealImageUrl && (
             <div className="mealtime-image-preview">
               <Typography variant="h6">Preview:</Typography>
@@ -145,6 +166,18 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
             </div>
           )}
 
+        <div className="mealtime-form">
+          <div className="mealtime-input-group">
+            <label className="mealtime-label">Meal Type Image</label>
+            {/* File input for image upload */}
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              fullWidth
+            />
+          </div>
+
           <div className="mealtime-input-group">
             <label className="mealtime-label">Meal Type Name</label>
             {/* Text input for meal name */}
@@ -160,7 +193,7 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
 
         <div className="mealtime-buttons">
           {/* Cancel button */}
-          <button onClick={onClose} className="mealtime-cancel-btn">
+          <button onClick={handleClose} className="mealtime-cancel-btn">
             Cancel
           </button>
           {/* Submit button disabled while uploading */}

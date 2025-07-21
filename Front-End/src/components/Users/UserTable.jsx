@@ -18,15 +18,24 @@ import { alpha } from '@mui/material/styles';
 import { Pencil, Trash2 } from 'lucide-react';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import { useUser } from '../../contexts/UserContext';
 
 export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
   const theme = useTheme();
+  const { userData, isAdmin, isSuperAdmin } = useUser();
+
   const [selected, setSelected] = useState([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDirection, setSortDirection] = useState('asc');
   const [sortColumn, setSortColumn] = useState('email');
+
+  const canDeleteUser = (targetUserType) => {
+    if (isSuperAdmin) return true;
+    if (isAdmin && targetUserType === 'User') return true;
+    return false;
+  };
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -73,6 +82,9 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
     return 0;
   });
 
+  const selectedUsers = users.filter((u) => selected.includes(u.id));
+  const canDeleteSelected = selectedUsers.every((u) => canDeleteUser(u.userType));
+
   return (
     <>
       <Paper
@@ -105,15 +117,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     onChange={handleSelectAll}
                   />
                 </TableCell>
-                <TableCell
-                  onClick={() => handleSort('email')}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                >
+                <TableCell onClick={() => handleSort('email')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
                   User
                   {sortColumn === 'email' && (
                     <span className="ml-1">
@@ -125,15 +129,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell
-                  onClick={() => handleSort('userType')}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                >
+                <TableCell onClick={() => handleSort('userType')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
                   User Type
                   {sortColumn === 'userType' && (
                     <span className="ml-1">
@@ -145,15 +141,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell
-                  onClick={() => handleSort('additionalDetails')}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                >
+                <TableCell onClick={() => handleSort('additionalDetails')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
                   Additional Details
                   {sortColumn === 'additionalDetails' && (
                     <span className="ml-1">
@@ -214,7 +202,11 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           backgroundColor:
-                            user.userType === 'Admin'
+                            user.userType === 'SuperAdmin'
+                              ? theme.palette.mode === 'dark'
+                                ? alpha('#9333ea', 0.2)
+                                : alpha('#9333ea', 0.1)
+                              : user.userType === 'Admin'
                               ? theme.palette.mode === 'dark'
                                 ? alpha(theme.palette.primary.main, 0.2)
                                 : alpha(theme.palette.primary.main, 0.1)
@@ -222,7 +214,9 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                                 ? alpha(theme.palette.grey[700], 0.5)
                                 : alpha(theme.palette.grey[300], 0.8),
                           color:
-                            user.userType === 'Admin'
+                            user.userType === 'SuperAdmin'
+                              ? '#9333ea'
+                              : user.userType === 'Admin'
                               ? theme.palette.primary.main
                               : theme.palette.text.secondary,
                         }}
@@ -240,29 +234,28 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                             size="small"
                             startIcon={<Pencil size={18} />}
                             onClick={() => onEditUser(user)}
-                            sx={{
-                              borderRadius: theme.shape.borderRadius,
-                            }}
+                            sx={{ borderRadius: theme.shape.borderRadius }}
                           >
                             Edit
                           </Button>
                         </Tooltip>
-                        <Tooltip title="Delete User">
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            startIcon={<Trash2 size={18} />}
-                            onClick={() => {
-                              setSelected([user.id]);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            sx={{
-                              borderRadius: theme.shape.borderRadius,
-                            }}
-                          >
-                            Delete
-                          </Button>
+                        <Tooltip title={canDeleteUser(user.userType) ? 'Delete User' : 'Not authorized'}>
+                          <span>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              startIcon={<Trash2 size={18} />}
+                              onClick={() => {
+                                setSelected([user.id]);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                              disabled={!canDeleteUser(user.userType)}
+                              sx={{ borderRadius: theme.shape.borderRadius }}
+                            >
+                              Delete
+                            </Button>
+                          </span>
                         </Tooltip>
                       </div>
                     </TableCell>
@@ -272,12 +265,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
           </Table>
         </TableContainer>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           {selected.length > 0 && (
             <Box
               sx={{
@@ -293,9 +281,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                 borderBottom: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <span
-                style={{ color: theme.palette.primary.main, fontWeight: 500 }}
-              >
+              <span style={{ color: theme.palette.primary.main, fontWeight: 500 }}>
                 {selected.length} users selected
               </span>
               <Button
@@ -304,9 +290,8 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                 size="small"
                 startIcon={<Trash2 size={18} />}
                 onClick={() => setIsDeleteDialogOpen(true)}
-                sx={{
-                  borderRadius: theme.shape.borderRadius,
-                }}
+                disabled={!canDeleteSelected}
+                sx={{ borderRadius: theme.shape.borderRadius }}
               >
                 Delete Selected
               </Button>
