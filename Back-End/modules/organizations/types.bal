@@ -17,7 +17,6 @@ public type OrgProfile record {|
     string? org_email?;
 |};
 
-
 public type Register record {|
     string username;
     string org_name;

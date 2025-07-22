@@ -1,9 +1,10 @@
+import ResourceHub.common;
+import ResourceHub.database;
+
 import ballerina/http;
 import ballerina/io;
-import ballerina/sql;
 import ballerina/jwt;
-import ResourceHub.database;
-import ResourceHub.common;
+import ballerina/sql;
 
 // DashboardAdminService - RESTful service to provide data for admin dashboard
 @http:ServiceConfig {
@@ -20,9 +21,9 @@ service /dashboard/admin on database:dashboardListener {
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         // Existing counts
         record {|int user_count;|} userResult = check database:dbClient->queryRow(`SELECT COUNT(user_id) AS user_count FROM users WHERE org_id = ${orgId}`);
         int userCount = userResult.user_count;
@@ -198,9 +199,9 @@ service /dashboard/admin on database:dashboardListener {
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         // Query to get all meal types from mealtimes
         stream<MealTime, sql:Error?> mealTimeStream = database:dbClient->query(
         `SELECT mealtime_id, mealtime_name FROM mealtimes WHERE org_id = ${orgId} ORDER BY mealtime_id`,
@@ -284,9 +285,9 @@ service /dashboard/admin on database:dashboardListener {
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         // Query to get total and allocated quantities by category
         stream<ResourceAllocationData, sql:Error?> allocationStream = database:dbClient->query(
         `SELECT 

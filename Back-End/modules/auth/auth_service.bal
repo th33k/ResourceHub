@@ -1,10 +1,11 @@
+import ResourceHub.common;
+import ResourceHub.database;
+
 import ballerina/email;
 import ballerina/http;
 import ballerina/io;
 import ballerina/jwt;
 import ballerina/sql;
-import ResourceHub.database;
-import ResourceHub.common;
 
 // JWT configuration is now in jwt_utils.bal to avoid duplication
 

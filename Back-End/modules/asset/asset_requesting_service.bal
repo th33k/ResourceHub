@@ -1,9 +1,10 @@
+import ResourceHub.common;
+import ResourceHub.database;
+
 import ballerina/http;
 import ballerina/io;
-import ballerina/sql;
 import ballerina/jwt;
-import ResourceHub.database;
-import ResourceHub.common;
+import ballerina/sql;
 
 @http:ServiceConfig {
     cors: {
@@ -17,12 +18,12 @@ service /assetrequest on database:mainListener {
     resource function get details(http:Request req) returns AssetRequest[]|error {
         // Validate JWT and check for allowed roles (admin, manager, user)
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         stream<AssetRequest, sql:Error?> resultstream = database:dbClient->query
         (`SELECT 
         ra.requestedasset_id,
@@ -55,12 +56,12 @@ service /assetrequest on database:mainListener {
 
     resource function get details/[int userid](http:Request req) returns AssetRequest[]|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin" ,"User","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "User", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         stream<AssetRequest, sql:Error?> resultstream = database:dbClient->query
         (`SELECT 
         ra.requestedasset_id,
@@ -157,9 +158,9 @@ service /assetrequest on database:mainListener {
         if (!common:hasAnyRole(payload, ["Admin", "User", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access due assets");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         stream<AssetRequest, sql:Error?> resultstream = database:dbClient->query
         (`SELECT 
         ra.requestedasset_id,
@@ -199,9 +200,9 @@ service /assetrequest on database:mainListener {
         if (!common:hasAnyRole(payload, ["Admin", "User", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access due assets");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         stream<AssetRequest, sql:Error?> resultstream = database:dbClient->query
         (`SELECT 
         ra.requestedasset_id,

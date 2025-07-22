@@ -1,9 +1,10 @@
+import ResourceHub.common;
+import ResourceHub.database;
+
 import ballerina/http;
-import ballerina/sql;
 import ballerina/io;
 import ballerina/jwt;
-import ResourceHub.database;
-import ResourceHub.common;
+import ballerina/sql;
 
 // CORS configuration for allowing specific cross-origin requests
 @http:ServiceConfig {
@@ -15,17 +16,17 @@ import ResourceHub.common;
 }
 
 // Service handling CRUD operations for meal types
-service /mealtype on database:mainListener{
+service /mealtype on database:mainListener {
     // Only admin, manager, and User can view meal types
     resource function get details(http:Request req) returns MealType[]|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin","User","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "User", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to access this resource");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
-        stream<MealType, sql:Error?> resultStream = 
+
+        stream<MealType, sql:Error?> resultStream =
             database:dbClient->query(`SELECT mealtype_id, mealtype_name, mealtype_image_url, org_id FROM mealtypes WHERE org_id = ${orgId}`);
         MealType[] mealtypes = [];
         check resultStream.forEach(function(MealType meal) {
@@ -37,12 +38,12 @@ service /mealtype on database:mainListener{
     // Only admin and manager can add meal types
     resource function post add(http:Request req, @http:Payload MealType mealType) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to add meal types");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         io:println("Received meal type data: " + mealType.toJsonString());
         sql:ExecutionResult result = check database:dbClient->execute(`
             INSERT INTO mealtypes (mealtype_name, mealtype_image_url, org_id)
@@ -64,12 +65,12 @@ service /mealtype on database:mainListener{
     // Only admin and manager can update meal types
     resource function put details/[int id](http:Request req, @http:Payload MealType mealType) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to update meal types");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         sql:ExecutionResult result = check database:dbClient->execute(`
             UPDATE mealtypes SET mealtype_name = ${mealType.mealtype_name}, mealtype_image_url = ${mealType.mealtype_image_url}
             WHERE mealtype_id = ${id} AND org_id = ${orgId}
@@ -88,12 +89,12 @@ service /mealtype on database:mainListener{
     // Only admin and manager can delete meal types
     resource function delete details/[int id](http:Request req) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin","SuperAdmin"])) {
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
             return error("Forbidden: You do not have permission to delete meal types");
         }
-        
+
         int orgId = check common:getOrgId(payload);
-        
+
         sql:ExecutionResult result = check database:dbClient->execute(`
             DELETE FROM mealtypes WHERE mealtype_id = ${id} AND org_id = ${orgId}
         `);

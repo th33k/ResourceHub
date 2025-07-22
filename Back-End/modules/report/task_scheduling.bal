@@ -1,15 +1,16 @@
+import ballerina/http;
 import ballerina/io;
 import ballerina/task;
-import ballerina/http;
 
 class WeeklyJob {
     *task:Job;
+
     public function execute() {
         do {
             http:Client reportClient = check new ("http://localhost:9091");
             http:Response mealResp = check reportClient->get("/report/generateWeeklyMeal");
             io:println("Weekly Meal report response: ", check mealResp.getTextPayload());
-            
+
             http:Response assetResp = check reportClient->get("/report/generateWeeklyAsset");
             io:println("Weekly Asset report response: ", check assetResp.getTextPayload());
 
@@ -24,6 +25,7 @@ class WeeklyJob {
 // Biweekly job: calls biweekly endpoints
 class BiweeklyJob {
     *task:Job;
+
     public function execute() {
         do {
             http:Client reportClient = check new ("http://localhost:9091");
@@ -44,6 +46,7 @@ class BiweeklyJob {
 // Monthly job: calls monthly endpoints
 class MonthlyJob {
     *task:Job;
+
     public function execute() {
         do {
             http:Client reportClient = check new ("http://localhost:9091");
