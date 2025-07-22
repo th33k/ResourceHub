@@ -83,7 +83,9 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
   });
 
   const selectedUsers = users.filter((u) => selected.includes(u.id));
-  const canDeleteSelected = selectedUsers.every((u) => canDeleteUser(u.userType));
+  const canDeleteSelected = selectedUsers.every((u) =>
+    canDeleteUser(u.userType),
+  );
 
   return (
     <>
@@ -117,7 +119,13 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     onChange={handleSelectAll}
                   />
                 </TableCell>
-                <TableCell onClick={() => handleSort('email')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
+                <TableCell
+                  onClick={() => handleSort('email')}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { color: theme.palette.primary.main },
+                  }}
+                >
                   User
                   {sortColumn === 'email' && (
                     <span className="ml-1">
@@ -129,7 +137,13 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell onClick={() => handleSort('userType')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
+                <TableCell
+                  onClick={() => handleSort('userType')}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { color: theme.palette.primary.main },
+                  }}
+                >
                   User Type
                   {sortColumn === 'userType' && (
                     <span className="ml-1">
@@ -141,7 +155,13 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                     </span>
                   )}
                 </TableCell>
-                <TableCell onClick={() => handleSort('additionalDetails')} sx={{ cursor: 'pointer', '&:hover': { color: theme.palette.primary.main } }}>
+                <TableCell
+                  onClick={() => handleSort('additionalDetails')}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { color: theme.palette.primary.main },
+                  }}
+                >
                   Additional Details
                   {sortColumn === 'additionalDetails' && (
                     <span className="ml-1">
@@ -207,18 +227,18 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                                 ? alpha('#9333ea', 0.2)
                                 : alpha('#9333ea', 0.1)
                               : user.userType === 'Admin'
-                              ? theme.palette.mode === 'dark'
-                                ? alpha(theme.palette.primary.main, 0.2)
-                                : alpha(theme.palette.primary.main, 0.1)
-                              : theme.palette.mode === 'dark'
-                                ? alpha(theme.palette.grey[700], 0.5)
-                                : alpha(theme.palette.grey[300], 0.8),
+                                ? theme.palette.mode === 'dark'
+                                  ? alpha(theme.palette.primary.main, 0.2)
+                                  : alpha(theme.palette.primary.main, 0.1)
+                                : theme.palette.mode === 'dark'
+                                  ? alpha(theme.palette.grey[700], 0.5)
+                                  : alpha(theme.palette.grey[300], 0.8),
                           color:
                             user.userType === 'SuperAdmin'
                               ? '#9333ea'
                               : user.userType === 'Admin'
-                              ? theme.palette.primary.main
-                              : theme.palette.text.secondary,
+                                ? theme.palette.primary.main
+                                : theme.palette.text.secondary,
                         }}
                       >
                         {user.userType}
@@ -239,7 +259,13 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                             Edit
                           </Button>
                         </Tooltip>
-                        <Tooltip title={canDeleteUser(user.userType) ? 'Delete User' : 'Not authorized'}>
+                        <Tooltip
+                          title={
+                            canDeleteUser(user.userType)
+                              ? 'Delete User'
+                              : 'Not authorized'
+                          }
+                        >
                           <span>
                             <Button
                               variant="outlined"
@@ -281,7 +307,9 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                 borderBottom: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <span style={{ color: theme.palette.primary.main, fontWeight: 500 }}>
+              <span
+                style={{ color: theme.palette.primary.main, fontWeight: 500 }}
+              >
                 {selected.length} users selected
               </span>
               <Button

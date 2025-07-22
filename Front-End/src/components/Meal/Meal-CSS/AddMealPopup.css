@@ -24,7 +24,7 @@
 }
 
 /* Theme variables for dark mode */
-[data-mui-color-scheme="dark"] {
+[data-mui-color-scheme='dark'] {
   --popup-bg-primary: #1e1e2f;
   --popup-bg-secondary: #252537;
   --popup-text-primary: #ffffff;
@@ -57,7 +57,11 @@
   padding: 32px;
   border-radius: 16px;
   box-shadow: 0px 20px 40px var(--popup-shadow);
-  background: linear-gradient(135deg, var(--popup-bg-primary) 0%, var(--popup-bg-secondary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--popup-bg-primary) 0%,
+    var(--popup-bg-secondary) 100%
+  );
   position: relative;
   overflow: hidden;
 }
@@ -162,7 +166,11 @@
 .mealtime-upload-btn {
   padding: 16px;
   margin-top: 12px;
-  background: linear-gradient(135deg, var(--popup-upload-bg-primary) 0%, var(--popup-upload-bg-secondary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--popup-upload-bg-primary) 0%,
+    var(--popup-upload-bg-secondary) 100%
+  );
   border: 2px dashed var(--popup-upload-border);
   border-radius: 12px;
   cursor: pointer;
@@ -171,7 +179,11 @@
 }
 
 .mealtime-upload-btn:hover {
-  background: linear-gradient(135deg, var(--popup-upload-bg-secondary) 0%, var(--popup-upload-border) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--popup-upload-bg-secondary) 0%,
+    var(--popup-upload-border) 100%
+  );
   border-color: var(--popup-text-secondary);
 }
 
@@ -191,7 +203,7 @@
   width: 150px;
   height: 150px;
   object-fit: cover;
- margin: auto;
+  margin: auto;
   border-radius: 12px;
   box-shadow: 0px 8px 24px var(--popup-shadow);
   transition: all 0.3s ease;
@@ -225,13 +237,21 @@
 }
 
 .mealtime-cancel-btn {
-  background: linear-gradient(135deg, var(--popup-button-cancel-bg) 0%, var(--popup-bg-secondary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--popup-button-cancel-bg) 0%,
+    var(--popup-bg-secondary) 100%
+  );
   color: var(--popup-button-cancel-text);
   border: 2px solid var(--popup-button-cancel-border);
 }
 
 .mealtime-cancel-btn:hover {
-  background: linear-gradient(135deg, var(--popup-button-cancel-bg-hover) 0%, var(--popup-button-cancel-border) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--popup-button-cancel-bg-hover) 0%,
+    var(--popup-button-cancel-border) 100%
+  );
   color: var(--popup-text-secondary);
   border-color: var(--popup-input-border-hover);
   transform: translateY(-2px);
@@ -274,8 +294,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Delete Dialog Styles */
@@ -350,26 +374,26 @@
   .mealtime-popup-container {
     padding: 24px 20px;
   }
-  
+
   .mealtime-title {
     font-size: 1.5rem;
   }
-  
+
   .mealtime-buttons {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .mealtime-cancel-btn,
   .mealtime-submit-btn {
     width: 100%;
   }
-  
+
   .mealtime-card {
     width: 240px;
     height: 320px;
   }
-  
+
   .mealtime-card-media {
     height: 160px;
     width: 160px;

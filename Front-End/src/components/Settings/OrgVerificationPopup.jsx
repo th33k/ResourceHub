@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -53,7 +52,7 @@ function OrgVerificationPopup({ onClose, email, code }) {
             headers: {
               ...getAuthHeader(),
             },
-          }
+          },
         );
 
         toast.success('Verification successful!');
@@ -77,13 +76,13 @@ function OrgVerificationPopup({ onClose, email, code }) {
       aria-labelledby="org-verification-popup-title"
       aria-describedby="org-verification-popup-description"
       BackdropProps={{
-        className: 'verify-popup-backdrop'
+        className: 'verify-popup-backdrop',
       }}
       PaperProps={{
         style: {
           borderRadius: '20px',
-          overflow: 'visible'
-        }
+          overflow: 'visible',
+        },
       }}
     >
       <div className="verify-inner">
@@ -92,9 +91,11 @@ function OrgVerificationPopup({ onClose, email, code }) {
             <Shield className="shield-icon" />
           </div>
           <h1 className="verify-title">Organization Email Verification</h1>
-          <p className="verify-subtitle">Verify your organization email address</p>
+          <p className="verify-subtitle">
+            Verify your organization email address
+          </p>
         </div>
-        
+
         <form className="verify-form" onSubmit={handleSubmit}>
           <div className="verify-email-info">
             <Mail className="mail-icon" />
@@ -129,7 +130,11 @@ function OrgVerificationPopup({ onClose, email, code }) {
               <Check className="btn-icon" />
               Verify Email
             </button>
-            <button type="button" className="verify-cancel-btn" onClick={onClose}>
+            <button
+              type="button"
+              className="verify-cancel-btn"
+              onClick={onClose}
+            >
               <X className="btn-icon" />
               Cancel
             </button>

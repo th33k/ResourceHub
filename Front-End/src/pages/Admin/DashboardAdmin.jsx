@@ -8,13 +8,13 @@ import {
   CalendarDays,
   PackageCheck,
 } from 'lucide-react';
-import axios from 'axios';
+// import axios from 'axios';
 import AdminLayout from '../../layouts/Admin/AdminLayout';
 import { StatCard } from '../../components/Dashboard/Admin/StatCard';
-import { ResourceCard } from '../../components/Dashboard/Admin/ResourceCard';
+// import { ResourceCard } from '../../components/Dashboard/Admin/ResourceCard';
 import { MealDistributionChart } from '../../components/Dashboard/Admin/MealDistributionChart';
 import { ResourceAllocation } from '../../components/Dashboard/Admin/ResourceAllocation';
-import { getMonthLabels } from '../../utils/dateUtils';
+// import { getMonthLabels } from '../../utils/dateUtils';
 import { useAdminDashboardData } from '../../query/adminDashboardQueries';
 import { QuickActions } from '../../components/Dashboard/User/QuickActions';
 
@@ -103,16 +103,16 @@ const AdminDashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={iconMap[stat.icon] || <BoxIcon />}
-            chartData={{
-              labels: stat.monthLabels || [],
-              data: stat.monthlyData,
-            }}
-          />
+            <StatCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={iconMap[stat.icon] || <BoxIcon />}
+              chartData={{
+                labels: stat.monthLabels || [],
+                data: stat.monthlyData,
+              }}
+            />
           ))}
         </div>
         {/* Charts Grid */}

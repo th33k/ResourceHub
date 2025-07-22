@@ -1,6 +1,13 @@
-
 import { useState, useEffect } from 'react';
-import { Button, TextField, MenuItem, Select, InputLabel, FormControl, CircularProgress } from '@mui/material';
+import {
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+} from '@mui/material';
 import { Plus, Search } from 'lucide-react';
 import { AddMaintenancePopup } from '../../../components/Maintenance/AddMaintenancePopup';
 import { ToastContainer, toast } from 'react-toastify';
@@ -20,7 +27,7 @@ const MaintenanceDetailsUser = () => {
   const [filterType, setFilterType] = useState('All');
   const [loading, setLoading] = useState(true);
 
-    const { userData } = useUser();
+  const { userData } = useUser();
   // Fallback: decode token directly if userData.id is undefined
   let userId = userData.id;
   if (!userId) {
@@ -35,7 +42,7 @@ const MaintenanceDetailsUser = () => {
     try {
       const response = await axios.get(
         `${BASE_URLS.maintenance}/details/${userId}`,
-        { headers: { ...getAuthHeader() } }
+        { headers: { ...getAuthHeader() } },
       );
       setMaintenance(response.data);
     } catch (error) {
@@ -49,8 +56,6 @@ const MaintenanceDetailsUser = () => {
   useEffect(() => {
     fetchMaintenanceData();
   }, []);
-
-
 
   const handleAddMaintenance = async (newMaintenance) => {
     try {
@@ -69,7 +74,7 @@ const MaintenanceDetailsUser = () => {
       const response = await axios.post(
         `${BASE_URLS.maintenance}/add`,
         payload,
-        { headers: { ...getAuthHeader() } }
+        { headers: { ...getAuthHeader() } },
       );
       toast.success(response.data.message);
       fetchMaintenanceData();

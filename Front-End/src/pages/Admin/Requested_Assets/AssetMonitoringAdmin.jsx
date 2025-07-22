@@ -30,15 +30,12 @@ const AssetMonitoringAdmin = () => {
   ];
 
   const fetchAssets = async () => {
-    const response = await fetch(
-      `${BASE_URLS.assetRequest}/details`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-      }
-    );
+    const response = await fetch(`${BASE_URLS.assetRequest}/details`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    });
     const data = await response.json();
     setAssets(data);
   };
@@ -75,7 +72,7 @@ const AssetMonitoringAdmin = () => {
       await response.json();
 
       // Send notification to user if status is approved or rejected
-      if (["Accepted", "Rejected"].includes(updatedAsset.status)) {
+      if (['Accepted', 'Rejected'].includes(updatedAsset.status)) {
         try {
           await sendAssetNotification({
             user_id: updatedAsset.user_id,

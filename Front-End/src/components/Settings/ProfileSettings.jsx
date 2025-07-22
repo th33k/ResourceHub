@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -58,7 +57,7 @@ const ProfileSection = () => {
             headers: {
               ...getAuthHeader(),
             },
-          }
+          },
         );
         const [profile] = data;
         setFormData({
@@ -108,7 +107,7 @@ const ProfileSection = () => {
               headers: {
                 ...getAuthHeader(),
               },
-            }
+            },
           );
           toast.success('Profile updated successfully!');
           // Close dialog after successful update
@@ -127,7 +126,7 @@ const ProfileSection = () => {
       <div className="error">
         <p>Error: {error}</p>
         <a href="/login">
-          <button style={{marginTop: '1rem'}}>Go to Login</button>
+          <button style={{ marginTop: '1rem' }}>Go to Login</button>
         </a>
       </div>
     );
@@ -137,7 +136,13 @@ const ProfileSection = () => {
     <div className="profile-section">
       <div className="header">
         <h2>Profile Settings</h2>
-        <p style={{ color: 'var(--settings-popup-text-secondary)', textAlign: 'center', margin: '0 0 16px 0' }}>
+        <p
+          style={{
+            color: 'var(--settings-popup-text-secondary)',
+            textAlign: 'center',
+            margin: '0 0 16px 0',
+          }}
+        >
           Customize your profile information and appearance
         </p>
         {formData.picture && (
@@ -151,7 +156,14 @@ const ProfileSection = () => {
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-group">
           <label>
-            <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <User
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Display Name
           </label>
           <input
@@ -166,7 +178,14 @@ const ProfileSection = () => {
         </div>
         <div className="form-group">
           <label>
-            <Camera size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <Camera
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Profile Picture URL
           </label>
           <input
@@ -180,7 +199,14 @@ const ProfileSection = () => {
         </div>
         <div className="form-group">
           <label>
-            <FileText size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <FileText
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Bio
           </label>
           <textarea
@@ -191,13 +217,15 @@ const ProfileSection = () => {
             placeholder="Tell us about yourself..."
             maxLength={150}
           />
-          <small style={{ 
-            color: 'var(--settings-popup-text-secondary)', 
-            fontSize: '13px', 
-            textAlign: 'right', 
-            display: 'block',
-            marginTop: '4px'
-          }}>
+          <small
+            style={{
+              color: 'var(--settings-popup-text-secondary)',
+              fontSize: '13px',
+              textAlign: 'right',
+              display: 'block',
+              marginTop: '4px',
+            }}
+          >
             {formData.bio.length}/150 characters
           </small>
         </div>

@@ -1,6 +1,6 @@
 // API base URL for all microservices
 const BASE_URL =
-  "https://e7f2b9c3-7f86-4a6b-91f9-2ae1c2e1c631-dev.e1-us-east-azure.choreoapis.dev/default/ballerina";
+  'https://e7f2b9c3-7f86-4a6b-91f9-2ae1c2e1c631-dev.e1-us-east-azure.choreoapis.dev/default/ballerina';
 
 // Service-specific base URLs
 export const BASE_URLS = {
@@ -20,18 +20,18 @@ export const BASE_URLS = {
   // notification: `${BASE_URL}/notification-ad2/v1.0`,
 
   // For local development
-  login: "http://localhost:9094/auth",
-  maintenance: "http://localhost:9090/maintenance",
-  asset: "http://localhost:9090/asset",
-  user: "http://localhost:9090/user",
-  assetRequest: "http://localhost:9090/assetrequest",
-  calendar: "http://localhost:9090/calendar",
-  mealtime: "http://localhost:9090/mealtime",
-  mealtype: "http://localhost:9090/mealtype",
-  settings: "http://localhost:9090/settings",
-  dashboardAdmin: "http://localhost:9092/dashboard/admin",
-  dashboardUser: "http://localhost:9092/dashboard/user",
-  orgsettings: "http://localhost:9090/orgsettings",
-  report: "http://localhost:9090/schedulereports",
-  notification: "http://localhost:9093/notification",
+  login: 'http://localhost:9094/auth',
+  maintenance: 'http://localhost:9090/maintenance',
+  asset: 'http://localhost:9090/asset',
+  user: 'http://localhost:9090/user',
+  assetRequest: 'http://localhost:9090/assetrequest',
+  calendar: 'http://localhost:9090/calendar',
+  mealtime: 'http://localhost:9090/mealtime',
+  mealtype: 'http://localhost:9090/mealtype',
+  settings: 'http://localhost:9090/settings',
+  dashboardAdmin: 'http://localhost:9092/dashboard/admin',
+  dashboardUser: 'http://localhost:9092/dashboard/user',
+  orgsettings: 'http://localhost:9090/orgsettings',
+  report: 'http://localhost:9090/schedulereports',
+  notification: 'http://localhost:9093/notification',
 };

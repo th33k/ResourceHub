@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { useEffect } from 'react';
 import Card from '@mui/material/Card';
@@ -25,10 +24,10 @@ function MealCard({ mealId, name, image, onEdit, onDelete }) {
   const [mealName, setMealName] = React.useState(name);
   const [mealImage, setMealImage] = React.useState(image);
   const [error, setError] = React.useState(null);
-  
+
   // Theme styles hook
   const { updateCSSVariables } = useThemeStyles();
-  
+
   // Update CSS variables when theme changes
   useEffect(() => {
     updateCSSVariables();
@@ -78,9 +77,9 @@ function MealCard({ mealId, name, image, onEdit, onDelete }) {
       }
 
       const data = await response.json();
-      setMealName(name);      // Update state with new name
-      setMealImage(image);    // Update state with new image
-      setOpenEdit(false);     // Close edit popup
+      setMealName(name); // Update state with new name
+      setMealImage(image); // Update state with new image
+      setOpenEdit(false); // Close edit popup
       toast.success('Meal updated successfully!');
     } catch (error) {
       setError(`Error updating meal: ${error.message}`); // Show error message
@@ -91,8 +90,8 @@ function MealCard({ mealId, name, image, onEdit, onDelete }) {
   // Confirm and handle meal deletion
   const handleConfirmDelete = async () => {
     try {
-      await onDelete(mealId);  // Invoke parent delete handler
-      setOpenDelete(false);    // Close delete popup
+      await onDelete(mealId); // Invoke parent delete handler
+      setOpenDelete(false); // Close delete popup
       toast.success('Meal deleted successfully!');
     } catch (error) {
       setError(`Error deleting meal: ${error.message}`); // Show error message

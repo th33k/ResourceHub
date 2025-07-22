@@ -3,7 +3,14 @@ import { getAuthHeader } from '../../../utils/authHeader';
 import React, { useState, useEffect } from 'react';
 import MonitorTable from '../../../components/Asset/AssetRequestingUser/UserAssetRequestedtable';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button, TextField, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import {
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
 import { Search } from 'lucide-react';
 import RequestButton from '../../../components/Asset/AssetRequestingUser/RequestButton';
 import UserLayout from '../../../layouts/User/UserLayout';
@@ -49,7 +56,7 @@ const AssetRequestUsers = () => {
             'Content-Type': 'application/json',
             ...getAuthHeader(),
           },
-        }
+        },
       );
       const data = await response.json();
       // Ensure assets is always an array

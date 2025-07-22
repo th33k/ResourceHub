@@ -38,7 +38,11 @@
   margin: 0 0 16px 0;
   text-align: center;
   letter-spacing: -0.025em;
-  background: linear-gradient(135deg, var(--settings-accent-primary), var(--settings-accent-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--settings-accent-primary),
+    var(--settings-accent-secondary)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -95,7 +99,11 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--settings-accent-primary), var(--settings-accent-secondary));
+  background: linear-gradient(
+    90deg,
+    var(--settings-accent-primary),
+    var(--settings-accent-secondary)
+  );
 }
 
 .form-group-password .password-header {
@@ -128,7 +136,9 @@
   background: var(--settings-input-bg);
   border: 2px solid var(--settings-input-border);
   border-radius: 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -154,7 +164,9 @@
   color: var(--settings-accent-primary);
   padding: 2px !important;
   border-radius: 4px;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -262,7 +274,11 @@
   font-size: 16px;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, var(--settings-accent-primary), var(--settings-accent-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--settings-accent-primary),
+    var(--settings-accent-secondary)
+  );
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -341,12 +357,17 @@
 hr {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--settings-card-border), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--settings-card-border),
+    transparent
+  );
   margin: 32px 0;
 }
 
 /* File Input Styles */
-input[type="file"] {
+input[type='file'] {
   padding: 12px;
   border: 2px dashed var(--settings-input-border);
   border-radius: 12px;
@@ -356,7 +377,7 @@ input[type="file"] {
   transition: all 0.2s ease;
 }
 
-input[type="file"]:hover {
+input[type='file']:hover {
   border-color: var(--settings-accent-primary);
   background: var(--settings-input-bg);
 }

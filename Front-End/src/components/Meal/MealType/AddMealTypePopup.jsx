@@ -16,10 +16,10 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   const [imageFile, setImageFile] = useState(null);
   // State to track upload progress
   const [uploading, setUploading] = useState(false);
-  
+
   // Theme styles hook
   const { updateCSSVariables } = useThemeStyles();
-  
+
   // Update CSS variables when theme changes
   useEffect(() => {
     updateCSSVariables();
@@ -58,17 +58,17 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', imageFile);
-    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    formData.append(
+      'upload_preset',
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
     formData.append('cloud_name', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
 
     try {
-      const response = await fetch(
-        import.meta.env.VITE_CLOUDINARY_API_URL,
-        {
-          method: 'POST',
-          body: formData,
-        },
-      );
+      const response = await fetch(import.meta.env.VITE_CLOUDINARY_API_URL, {
+        method: 'POST',
+        body: formData,
+      });
 
       const data = await response.json();
       setUploading(false);
@@ -102,8 +102,6 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           }),
         });
 
-
-
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -123,16 +121,16 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
       fullWidth
       BackdropProps={{
         style: {
           backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(0, 0, 0, 0.6)'
-        }
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        },
       }}
     >
       <div className="mealtime-popup-container">
@@ -149,22 +147,22 @@ export const MealCardPopup = ({ open, onClose, title, subtitle, onSubmit }) => {
           </button>
         </div>
 
-                  {/* Show image preview if available */}
-          {mealImageUrl && (
-            <div className="mealtime-image-preview">
-              <Typography variant="h6">Preview:</Typography>
-              <img
-                src={mealImageUrl}
-                alt="Meal Type Preview"
-                className="mealtime-preview-img"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '300px',
-                  objectFit: 'cover',
-                }}
-              />
-            </div>
-          )}
+        {/* Show image preview if available */}
+        {mealImageUrl && (
+          <div className="mealtime-image-preview">
+            <Typography variant="h6">Preview:</Typography>
+            <img
+              src={mealImageUrl}
+              alt="Meal Type Preview"
+              className="mealtime-preview-img"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '300px',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+        )}
 
         <div className="mealtime-form">
           <div className="mealtime-input-group">

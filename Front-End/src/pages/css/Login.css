@@ -28,9 +28,9 @@
   justify-content: center;
   align-items: center;
 }
-.submitbtn{
+.submitbtn {
   display: block;
-  margin: auto  ;
+  margin: auto;
 }
 .login-page .login-form {
   width: 90%;

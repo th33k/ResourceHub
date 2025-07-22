@@ -12,7 +12,7 @@ export default function MealTypeSelect({ onSelect }) {
 
   // Theme styles hook
   const { updateCSSVariables } = useThemeStyles();
-  
+
   // Update CSS variables when theme changes
   useEffect(() => {
     updateCSSVariables();
@@ -24,15 +24,12 @@ export default function MealTypeSelect({ onSelect }) {
 
   const fetchMealTypes = async () => {
     try {
-      const response = await fetch(
-        `${BASE_URLS.mealtype}/details`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeader(),
-          },
-        }
-      );
+      const response = await fetch(`${BASE_URLS.mealtype}/details`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch meal types: ${response.status}`);
       }

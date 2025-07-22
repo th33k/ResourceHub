@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -13,7 +12,12 @@ import './Styles/SettingsComponents.css';
 
 const OrganizationSection = () => {
   // State to store form data
-  const [formData, setFormData] = useState({ org_name: '', org_logo: '', org_address: '',org_email:'' });
+  const [formData, setFormData] = useState({
+    org_name: '',
+    org_logo: '',
+    org_address: '',
+    org_email: '',
+  });
   const [openVerifyPopup, setOpenVerifyPopup] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [code, setCode] = useState('');
@@ -46,7 +50,12 @@ const OrganizationSection = () => {
     const decoded = decodeToken();
     userId = decoded?.id;
     orgId = decoded?.org_id;
-    console.log('ProfileSettings fallback decoded userId:', userId, 'orgId:', orgId);
+    console.log(
+      'ProfileSettings fallback decoded userId:',
+      userId,
+      'orgId:',
+      orgId,
+    );
   } else {
     const decoded = decodeToken();
     orgId = decoded?.org_id;
@@ -68,13 +77,13 @@ const OrganizationSection = () => {
             headers: {
               ...getAuthHeader(),
             },
-          }
+          },
         );
         const [organization] = data;
         setFormData({
-         org_name: organization.org_name || '',
-         org_logo: organization.org_logo || '',
-         org_address: organization.org_address || '',
+          org_name: organization.org_name || '',
+          org_logo: organization.org_logo || '',
+          org_address: organization.org_address || '',
           org_email: organization.org_email || '',
         });
       } catch (err) {
@@ -116,17 +125,20 @@ const OrganizationSection = () => {
     setUploading(true);
     const formData_upload = new FormData();
     formData_upload.append('file', imageFile);
-    formData_upload.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-    formData_upload.append('cloud_name', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+    formData_upload.append(
+      'upload_preset',
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
+    formData_upload.append(
+      'cloud_name',
+      import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+    );
 
     try {
-      const response = await fetch(
-        import.meta.env.VITE_CLOUDINARY_API_URL,
-        {
-          method: 'POST',
-          body: formData_upload,
-        },
-      );
+      const response = await fetch(import.meta.env.VITE_CLOUDINARY_API_URL, {
+        method: 'POST',
+        body: formData_upload,
+      });
 
       const data = await response.json();
       setUploading(false);
@@ -156,11 +168,11 @@ const OrganizationSection = () => {
         try {
           // Use fallback userId (from context or decoded token)
           if (!userId) throw new Error('User ID not found');
-          
+
           // Upload image if file is selected
           const imageUrl = await uploadImageToCloudinary();
           if (imageFile && !imageUrl) return; // Stop if upload failed
-          
+
           // Send profile update request
           await axios.put(
             `${BASE_URLS.orgsettings}/profile/${orgId}`,
@@ -173,17 +185,17 @@ const OrganizationSection = () => {
               headers: {
                 ...getAuthHeader(),
               },
-            }
+            },
           );
-          
+
           // Update formData with the uploaded URL
           if (imageUrl) {
-            setFormData(prev => ({ ...prev, org_logo: imageUrl }));
+            setFormData((prev) => ({ ...prev, org_logo: imageUrl }));
           }
-          
+
           // Clear file selection after successful upload
           setImageFile(null);
-          
+
           toast.success('Organization Profile updated successfully!');
           // Close dialog after successful update
           setConfirmationDialog({ open: false, message: '', onConfirm: null });
@@ -201,13 +213,13 @@ const OrganizationSection = () => {
       <div className="error">
         <p>Error: {error}</p>
         <a href="/login">
-          <button style={{marginTop: '1rem'}}>Go to Login</button>
+          <button style={{ marginTop: '1rem' }}>Go to Login</button>
         </a>
       </div>
     );
   }
 
-   // Handle email update and trigger verification popup
+  // Handle email update and trigger verification popup
   const handleEmailSubmit = async (email) => {
     try {
       // Use the same userId logic as other functions
@@ -223,7 +235,7 @@ const OrganizationSection = () => {
           headers: {
             ...getAuthHeader(),
           },
-        }
+        },
       );
       const existingEmail = data[0]?.org_email;
       if (email === existingEmail) {
@@ -245,7 +257,7 @@ const OrganizationSection = () => {
           headers: {
             ...getAuthHeader(),
           },
-        }
+        },
       );
       toast.success(`Verification code sent to ${email} successfully!`);
     } catch (error) {
@@ -258,9 +270,21 @@ const OrganizationSection = () => {
   return (
     <div className="profile-section">
       <div className="header">
-        <Building size={32} style={{ marginBottom: '16px', color: 'var(--settings-accent-primary)' }} />
+        <Building
+          size={32}
+          style={{
+            marginBottom: '16px',
+            color: 'var(--settings-accent-primary)',
+          }}
+        />
         <h2>Organization Settings</h2>
-        <p style={{ color: 'var(--settings-popup-text-secondary)', textAlign: 'center', margin: '0 0 16px 0' }}>
+        <p
+          style={{
+            color: 'var(--settings-popup-text-secondary)',
+            textAlign: 'center',
+            margin: '0 0 16px 0',
+          }}
+        >
           Manage your organization profile and information
         </p>
         {formData.org_logo && (
@@ -276,9 +300,9 @@ const OrganizationSection = () => {
                 borderRadius: '16px',
                 boxShadow: '0 8px 32px rgba(147, 51, 234, 0.2)',
               }}
-              onError={(e) => { 
-                e.target.style.display = 'none'; 
-                toast.error('Invalid image URL or failed to load image'); 
+              onError={(e) => {
+                e.target.style.display = 'none';
+                toast.error('Invalid image URL or failed to load image');
               }}
             />
           </div>
@@ -287,7 +311,14 @@ const OrganizationSection = () => {
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-group">
           <label>
-            <Building size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <Building
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Organization Name
           </label>
           <input
@@ -302,11 +333,28 @@ const OrganizationSection = () => {
         </div>
         <div className="form-group">
           <label>
-            <Image size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <Image
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Organization Logo
           </label>
-          <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Upload size={16} style={{ color: 'var(--settings-accent-primary)' }} />
+          <div
+            style={{
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <Upload
+              size={16}
+              style={{ color: 'var(--settings-accent-primary)' }}
+            />
             <input
               type="file"
               accept="image/*"
@@ -314,7 +362,12 @@ const OrganizationSection = () => {
               style={{ flex: 1 }}
             />
           </div>
-          <label style={{ fontSize: '14px', color: 'var(--settings-popup-text-secondary)' }}>
+          <label
+            style={{
+              fontSize: '14px',
+              color: 'var(--settings-popup-text-secondary)',
+            }}
+          >
             Or enter logo URL directly:
           </label>
           <input
@@ -328,7 +381,14 @@ const OrganizationSection = () => {
         </div>
         <div className="form-group">
           <label>
-            <MapPin size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+            <MapPin
+              size={18}
+              style={{
+                marginRight: '8px',
+                verticalAlign: 'middle',
+                display: 'inline',
+              }}
+            />
             Organization Address
           </label>
           <textarea
@@ -344,12 +404,19 @@ const OrganizationSection = () => {
           {uploading ? 'Uploading...' : 'Save Organization'}
         </button>
       </form>
-      
+
       <hr />
-      
+
       <div className="form-group" style={{ marginTop: '24px' }}>
         <label>
-          <Mail size={18} style={{ marginRight: '8px', verticalAlign: 'middle',display:'inline' }} />
+          <Mail
+            size={18}
+            style={{
+              marginRight: '8px',
+              verticalAlign: 'middle',
+              display: 'inline',
+            }}
+          />
           Organization Email
         </label>
         <input
@@ -369,8 +436,7 @@ const OrganizationSection = () => {
         </button>
       </div>
 
-
-        {openVerifyPopup && (
+      {openVerifyPopup && (
         <VerificationPopup
           onClose={() => setOpenVerifyPopup(false)}
           email={selectedEmail}
