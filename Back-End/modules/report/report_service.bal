@@ -12,41 +12,50 @@ configurable string PDFSHIFT_API_KEY = ?;
 service /report on database:reportListener {
     // Meal Reports
     resource function get generateWeeklyMeal() returns error? {
-        check generateAndSendReport("/schedulereports/weeklymealdetails", "Weekly Meal Events Report", "Weekly_Meal_Events_Report.pdf", "meal", "weekly");
+        check generateAndSendReport("/weeklymealdetails", "Weekly Meal Events Report", "Weekly_Meal_Events_Report.pdf", "meal", "weekly");
+        io:println("Weekly Meal Report generated and sent successfully");
     }
 
     resource function get generateBiweeklyMeal() returns error? {
-        check generateAndSendReport("/schedulereports/biweeklymealdetails", "Biweekly Meal Events Report", "Biweekly_Meal_Events_Report.pdf", "meal", "biweekly");
+        check generateAndSendReport("/biweeklymealdetails", "Biweekly Meal Events Report", "Biweekly_Meal_Events_Report.pdf", "meal", "Bi-weekly");
+        io:println("Biweekly Meal Report generated and sent successfully");
     }
 
     resource function get generateMonthlyMeal() returns error? {
-        check generateAndSendReport("/schedulereports/monthlymealdetails", "Monthly Meal Events Report", "Monthly_Meal_Events_Report.pdf", "meal", "monthly");
+        check generateAndSendReport("/monthlymealdetails", "Monthly Meal Events Report", "Monthly_Meal_Events_Report.pdf", "meal", "monthly");
+        io:println("Monthly Meal Report generated and sent successfully");
     }
 
     // Asset Reports
     resource function get generateWeeklyAsset() returns error? {
-        check generateAndSendReport("/schedulereports/weeklyassetrequestdetails", "Weekly Assets Report", "Weekly_Assets_Report.pdf", "asset", "weekly");
+        check generateAndSendReport("/weeklyassetrequestdetails", "Weekly Assets Report", "Weekly_Assets_Report.pdf", "asset", "weekly");
+        io:println("Weekly Asset Report generated and sent successfully");
     }
 
     resource function get generateBiweeklyAsset() returns error? {
-        check generateAndSendReport("/schedulereports/biweeklyassetrequestdetails", "Biweekly Assets Report", "Biweekly_Assets_Report.pdf", "asset", "biweekly");
+        check generateAndSendReport("/biweeklyassetrequestdetails", "Biweekly Assets Report", "Biweekly_Assets_Report.pdf", "asset", "Bi-weekly");
+        io:println("Biweekly Asset Report generated and sent successfully");
     }
 
     resource function get generateMonthlyAsset() returns error? {
-        check generateAndSendReport("/schedulereports/monthlyassetrequestdetails", "Monthly Assets Report", "Monthly_Assets_Report.pdf", "asset", "monthly");
+        check generateAndSendReport("/monthlyassetrequestdetails", "Monthly Assets Report", "Monthly_Assets_Report.pdf", "asset", "monthly");
+        io:println("Monthly Asset Report generated and sent successfully");
     }
 
     // Maintenance Reports
     resource function get generateWeeklyMaintenance() returns error? {
-        check generateAndSendReport("/schedulereports/weeklymaintenancedetails", "Weekly Maintenances Report", "Weekly_Maintenances_Report.pdf", "maintenance", "weekly");
+        check generateAndSendReport("/weeklymaintenancedetails", "Weekly Maintenances Report", "Weekly_Maintenances_Report.pdf", "maintenance", "weekly");
+        io:println("✅ Weekly Maintenance Report generated and sent successfully");
     }
 
     resource function get generateBiweeklyMaintenance() returns error? {
-        check generateAndSendReport("/schedulereports/biweeklymaintenancedetails", "Biweekly Maintenances Report", "Biweekly_Maintenances_Report.pdf", "maintenance", "biweekly");
+        check generateAndSendReport("/biweeklymaintenancedetails", "Biweekly Maintenances Report", "Biweekly_Maintenances_Report.pdf", "maintenance", "Bi-weekly");
+        io:println("✅ Biweekly Maintenance Report generated and sent successfully");
     }
 
     resource function get generateMonthlyMaintenance() returns error? {
-        check generateAndSendReport("/schedulereports/monthlymaintenancedetails", "Monthly Maintenances Report", "Monthly_Maintenances_Report.pdf", "maintenance", "monthly");
+        check generateAndSendReport("/monthlymaintenancedetails", "Monthly Maintenances Report", "Monthly_Maintenances_Report.pdf", "maintenance", "monthly");
+        io:println("✅ Monthly Maintenance Report generated and sent successfully");
     }
 }
 
@@ -73,13 +82,17 @@ function generateAndSendReport(string endpoint, string reportTitle, string fileN
 function generateAndSendReportForOrg(string endpoint, string reportTitle, string fileName, string reportName, string frequency, int orgId) returns error? {
 
     // 1. Fetch data for the report for this specific organization
-    io:println("Step 1: Fetching data for the report from endpoint: " + endpoint + " for org: " + orgId.toString());
-    http:Client dataClient = check new ("http://localhost:9091");
+
+    // Use the actual report generation endpoint
+    http:Client dataClient = check new ("https://e7f2b9c3-7f86-4a6b-91f9-2ae1c2e1c631-dev.e1-us-east-azure.choreoapis.dev/default/ballerina/schedulereports-4d0/v1.0");
+
+    // Alternatively, if running locally, you can use:
+    // http:Client dataClient = check new ("http://localhost:9091/schedulereports");
+
     http:Response dataResp = check dataClient->get(endpoint + "/" + orgId.toString());
     json data = check dataResp.getJsonPayload();
 
     // 2. Generate HTML content
-    io:println("Step 2: Generating HTML content for the report for org: " + orgId.toString());
     string htmlContent = "<!DOCTYPE html>\n<html>\n<head>\n" +
                         "<title>" + reportTitle + "</title>\n" +
                         "<style>table { border-collapse: collapse; width: 100%; }" +
@@ -115,7 +128,6 @@ function generateAndSendReportForOrg(string endpoint, string reportTitle, string
     htmlContent += "</table></body></html>";
 
     // 3. Convert HTML to PDF using PDFShift API
-    io:println("Step 3: Converting HTML to PDF using PDFShift API for org: " + orgId.toString());
     http:Client pdfShiftClient = check new ("https://api.pdfshift.io");
     json pdfRequest = {
         "source": htmlContent,
@@ -133,10 +145,8 @@ function generateAndSendReportForOrg(string endpoint, string reportTitle, string
     );
 
     byte[] pdfBytes = check pdfResponse.getBinaryPayload();
-    io:println("Step 3: PDF generated, size: " + pdfBytes.length().toString() + " bytes for org: " + orgId.toString());
 
     // 4. Fetch user emails from DB for this report type, frequency, and organization
-    io:println("Step 4: Fetching user emails for report type: " + reportName + ", frequency: " + frequency + ", org: " + orgId.toString());
     sql:ParameterizedQuery pq = `SELECT u.email FROM schedulereports s JOIN users u ON s.user_id = u.user_id WHERE s.report_name = ${reportName} AND s.frequency = ${frequency} AND s.org_id = ${orgId}`;
     stream<record {|string email;|}, error?> emailStream = database:dbClient->query(pq);
     string[] emailList = [];
@@ -146,15 +156,12 @@ function generateAndSendReportForOrg(string endpoint, string reportTitle, string
     check e;
     check emailStream.close();
 
-    io:println("Step 4: Number of emails found: " + emailList.length().toString() + " for org: " + orgId.toString());
     if emailList.length() == 0 {
-        io:println("No users found for this report and frequency in org: " + orgId.toString());
-        // Cancel the email sending part if no emails found
+        io:println("ℹ️ No users found for " + reportName + " " + frequency + " report in org: " + orgId.toString());
         return;
     }
 
     // 5. Send email with PDF attachment to all users in this organization
-    io:println("Step 5: Sending email with PDF attachment to users in org: " + orgId.toString());
     mime:Entity pdfAttachment = new;
     pdfAttachment.setByteArray(pdfBytes, "application/pdf");
     pdfAttachment.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
@@ -167,12 +174,11 @@ function generateAndSendReportForOrg(string endpoint, string reportTitle, string
     };
 
     check common:emailClient->sendMessage(emailMessage);
-    io:println("Step 5: Email sent successfully to all users in org: " + orgId.toString());
+    io:println("📧 Email sent successfully to " + emailList.length().toString() + " users for " + reportName + " " + frequency + " report in org: " + orgId.toString());
 
-    // Optionally, log or return a message
     return;
 }
 
 public function startReportService() returns error? {
-    io:println("Report service started on port 9090");
+    io:println("Report service started on port 9091");
 }

@@ -9,8 +9,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Plus, Search } from 'lucide-react';
-import { MaintenanceTable } from '../../../components/Maintenance/MaintenanceTable.jsx';
-import { AddMaintenancePopup } from '../../../components/Maintenance/AddMaintenancePopup.jsx';
+import { MaintenanceTable } from '../../../components/Maintenance/Admin';
+import { AddMaintenancePopup } from '../../../components/Maintenance/User';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
@@ -125,7 +125,7 @@ const MaintenanceDetails = () => {
   };
 
   const filteredMaintenance = maintenance.filter((item) => {
-    const searchMatch = item.name
+    const searchMatch = item.username
       .toLowerCase()
       .includes(searchText.toLowerCase());
     const typeMatch = filterType === 'All' || item.priorityLevel === filterType;

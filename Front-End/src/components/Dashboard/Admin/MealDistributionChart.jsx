@@ -21,7 +21,6 @@ ChartJS.register(
   Legend,
 );
 
-
 // Updated to accept dynamic data as props
 export const MealDistributionChart = ({ data }) => {
   const theme = useTheme();
@@ -51,7 +50,7 @@ export const MealDistributionChart = ({ data }) => {
   // Find the maximum value in all datasets
   let maxValue = 0;
   if (Array.isArray(data.datasets)) {
-    data.datasets.forEach(ds => {
+    data.datasets.forEach((ds) => {
       if (Array.isArray(ds.data)) {
         const localMax = Math.max(...ds.data);
         if (localMax > maxValue) maxValue = localMax;
@@ -71,7 +70,7 @@ export const MealDistributionChart = ({ data }) => {
         beginAtZero: true,
         max: maxValue + 3,
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             if (Number.isInteger(value)) {
               return value;
             }

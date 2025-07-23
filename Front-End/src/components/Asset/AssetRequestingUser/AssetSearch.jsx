@@ -12,7 +12,11 @@ function AssetSearch({ value, onChange, setAssetId }) {
     axios
       .get(`${BASE_URLS.asset}/details`, { headers: { ...getAuthHeader() } })
       .then((res) => {
-        setAssets(res.data);
+        // Filter assets to only show available ones
+        const availableAssets = res.data.filter(
+          (asset) => asset.is_available === true,
+        );
+        setAssets(availableAssets);
         setLoading(false);
       })
       .catch((err) => {

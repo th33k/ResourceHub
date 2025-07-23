@@ -1,9 +1,5 @@
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   TextField,
   Select,
   MenuItem,
@@ -11,11 +7,16 @@ import {
   InputLabel,
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { X, Wrench, Plus } from 'lucide-react';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import './MaintenanceDialog.css';
+import { X, Edit, Wrench } from 'lucide-react';
+import { useThemeStyles } from '../../../hooks/useThemeStyles';
+import '../shared/MaintenanceDialog.css';
 
-export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
+export const EditMaintenancePopup = ({
+  open,
+  onClose,
+  maintenance,
+  onSave,
+}) => {
   const [name, setName] = useState('');
   const [priorityLevel, setPriorityLevel] = useState('Low');
   const [description, setDescription] = useState('');
@@ -30,6 +31,14 @@ export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
     updateCSSVariables();
   }, [updateCSSVariables]);
 
+  useEffect(() => {
+    if (maintenance) {
+      setName(maintenance.name || '');
+      setPriorityLevel(maintenance.priorityLevel || 'Low');
+      setDescription(maintenance.description || '');
+    }
+  }, [maintenance]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setNameError(!name.trim());
@@ -39,7 +48,13 @@ export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
       return;
     }
 
-    onAdd({ name, priorityLevel, description });
+    onSave({
+      ...maintenance,
+      name,
+      priorityLevel,
+      description,
+    });
+
     // Clear form after successful submission
     setName('');
     setPriorityLevel('Low');
@@ -58,6 +73,8 @@ export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
     setDescriptionError(false);
     onClose();
   };
+
+  if (!maintenance) return null;
 
   return (
     <Dialog
@@ -82,12 +99,12 @@ export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
         <div className="maintenance-popup-header">
           <div className="maintenance-popup-header-content">
             <div className="maintenance-popup-header-icon">
-              <Wrench size={24} color="#f59e0b" />
+              <Edit size={24} color="#f59e0b" />
             </div>
             <div>
-              <h2 className="maintenance-popup-title">Add Maintenance</h2>
+              <h2 className="maintenance-popup-title">Edit Maintenance</h2>
               <p className="maintenance-popup-subtitle">
-                Create a new maintenance request
+                Update your maintenance request
               </p>
             </div>
           </div>
@@ -153,8 +170,8 @@ export const AddMaintenancePopup = ({ open, onClose, onAdd }) => {
               Cancel
             </button>
             <button type="submit" className="maintenance-popup-submit-btn">
-              <Plus size={16} />
-              Add Maintenance
+              <Edit size={16} />
+              Update Maintenance
             </button>
           </div>
         </form>

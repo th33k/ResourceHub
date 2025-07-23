@@ -7,18 +7,17 @@ export function useAdminDashboardData() {
   return useQuery({
     queryKey: ['adminDashboardData'],
     queryFn: async () => {
-      const [statsRes, mealRes, resourceAllocRes] =
-        await Promise.all([
-          axios.get(`${BASE_URLS.dashboardAdmin}/stats`, {
-            headers: { ...getAuthHeader() },
-          }),
-          axios.get(`${BASE_URLS.dashboardAdmin}/mealdistribution`, {
-            headers: { ...getAuthHeader() },
-          }),
-          axios.get(`${BASE_URLS.dashboardAdmin}/resourceallocation`, {
-            headers: { ...getAuthHeader() },
-          }),
-        ]);
+      const [statsRes, mealRes, resourceAllocRes] = await Promise.all([
+        axios.get(`${BASE_URLS.dashboardAdmin}/stats`, {
+          headers: { ...getAuthHeader() },
+        }),
+        axios.get(`${BASE_URLS.dashboardAdmin}/mealdistribution`, {
+          headers: { ...getAuthHeader() },
+        }),
+        axios.get(`${BASE_URLS.dashboardAdmin}/resourceallocation`, {
+          headers: { ...getAuthHeader() },
+        }),
+      ]);
       return {
         stats: statsRes.data,
         mealData: mealRes.data,

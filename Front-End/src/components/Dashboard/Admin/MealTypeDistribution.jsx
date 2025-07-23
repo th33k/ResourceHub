@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -40,8 +38,6 @@ const options = {
     },
   },
 };
-
-
 
 export const MealTypeDistribution = ({ date }) => {
   // If no date prop, use today in YYYY-MM-DD
@@ -103,9 +99,12 @@ export const MealTypeDistribution = ({ date }) => {
             type="date"
             value={selectedDate}
             max={getToday()}
-            onChange={e => setSelectedDate(e.target.value)}
+            onChange={(e) => setSelectedDate(e.target.value)}
             className="px-2 py-1 text-sm border rounded"
-            style={{ background: theme.palette.background.paper, color: theme.palette.text.primary }}
+            style={{
+              background: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+            }}
           />
         </div>
         <div>Loading meal type distribution...</div>
@@ -139,9 +138,12 @@ export const MealTypeDistribution = ({ date }) => {
             type="date"
             value={selectedDate}
             max={getToday()}
-            onChange={e => setSelectedDate(e.target.value)}
+            onChange={(e) => setSelectedDate(e.target.value)}
             className="px-2 py-1 text-sm border rounded"
-            style={{ background: theme.palette.background.paper, color: theme.palette.text.primary }}
+            style={{
+              background: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+            }}
           />
         </div>
         <div className="text-red-500">{error}</div>
@@ -152,7 +154,10 @@ export const MealTypeDistribution = ({ date }) => {
   let chartContent;
   if (!data || !data.data || data.data.length === 0) {
     chartContent = (
-      <div className="flex items-center justify-center flex-1 text-gray-500" style={{ minHeight: 180 }}>
+      <div
+        className="flex items-center justify-center flex-1 text-gray-500"
+        style={{ minHeight: 180 }}
+      >
         No meal data for selected date.
       </div>
     );
@@ -202,9 +207,12 @@ export const MealTypeDistribution = ({ date }) => {
           type="date"
           value={selectedDate}
           max={getToday()}
-          onChange={e => setSelectedDate(e.target.value)}
+          onChange={(e) => setSelectedDate(e.target.value)}
           className="px-2 py-1 text-sm border rounded"
-          style={{ background: theme.palette.background.paper, color: theme.palette.text.primary }}
+          style={{
+            background: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+          }}
         />
       </div>
     </div>

@@ -10,10 +10,17 @@ import {
   TablePagination,
   useTheme,
   Chip,
+  Button,
+  Tooltip,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { Edit, Trash2 } from 'lucide-react';
 
-export const MaintenanceTableUser = ({ maintenance }) => {
+export const MaintenanceTableUser = ({
+  maintenance,
+  onEditMaintenance,
+  onDeleteMaintenance,
+}) => {
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -116,6 +123,7 @@ export const MaintenanceTableUser = ({ maintenance }) => {
                 <TableCell>Description</TableCell>
                 <TableCell>Priority Level</TableCell>
                 <TableCell align="center">Status</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -176,6 +184,42 @@ export const MaintenanceTableUser = ({ maintenance }) => {
                             height: '24px',
                           }}
                         />
+                      </TableCell>
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          {item.status === 'Pending' && (
+                            <Tooltip title="Edit Maintenance">
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                size="small"
+                                startIcon={<Edit size={18} />}
+                                onClick={() =>
+                                  onEditMaintenance && onEditMaintenance(item)
+                                }
+                              >
+                                Edit
+                              </Button>
+                            </Tooltip>
+                          )}
+                          {(item.status === 'Pending' ||
+                            item.status === 'Rejected') && (
+                            <Tooltip title="Delete Maintenance">
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                size="small"
+                                startIcon={<Trash2 size={18} />}
+                                onClick={() =>
+                                  onDeleteMaintenance &&
+                                  onDeleteMaintenance(item)
+                                }
+                              >
+                                Delete
+                              </Button>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
