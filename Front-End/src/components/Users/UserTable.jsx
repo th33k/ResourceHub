@@ -27,7 +27,7 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
   const [selected, setSelected] = useState([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortDirection, setSortDirection] = useState('asc');
   const [sortColumn, setSortColumn] = useState('email');
 
@@ -37,11 +37,23 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
     return false;
   };
 
+  // Only select users visible on the current page
+  const getCurrentPageUserIds = () => {
+    return sortedUsers
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      .map((user) => user.id);
+  };
+
   const handleSelectAll = (event) => {
+    const currentPageUserIds = getCurrentPageUserIds();
     if (event.target.checked) {
-      setSelected(users.map((user) => user.id));
+      // Add only current page users to selection, plus any already selected from other pages
+      const newSelected = Array.from(new Set([...selected, ...currentPageUserIds]));
+      setSelected(newSelected);
     } else {
-      setSelected([]);
+      // Remove only current page users from selection
+      const newSelected = selected.filter((id) => !currentPageUserIds.includes(id));
+      setSelected(newSelected);
     }
   };
 
@@ -111,10 +123,12 @@ export const UserTable = ({ users, onEditUser, onDeleteUsers }) => {
                 <TableCell padding="checkbox">
                   <Checkbox
                     checked={
-                      users.length > 0 && selected.length === users.length
+                      getCurrentPageUserIds().length > 0 &&
+                      getCurrentPageUserIds().every((id) => selected.includes(id))
                     }
                     indeterminate={
-                      selected.length > 0 && selected.length < users.length
+                      getCurrentPageUserIds().some((id) => selected.includes(id)) &&
+                      !getCurrentPageUserIds().every((id) => selected.includes(id))
                     }
                     onChange={handleSelectAll}
                   />

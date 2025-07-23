@@ -7,12 +7,9 @@ export function useAdminDashboardData() {
   return useQuery({
     queryKey: ['adminDashboardData'],
     queryFn: async () => {
-      const [statsRes, resourcesRes, mealRes, resourceAllocRes] =
+      const [statsRes, mealRes, resourceAllocRes] =
         await Promise.all([
           axios.get(`${BASE_URLS.dashboardAdmin}/stats`, {
-            headers: { ...getAuthHeader() },
-          }),
-          axios.get(`${BASE_URLS.dashboardAdmin}/resources`, {
             headers: { ...getAuthHeader() },
           }),
           axios.get(`${BASE_URLS.dashboardAdmin}/mealdistribution`, {
@@ -24,7 +21,6 @@ export function useAdminDashboardData() {
         ]);
       return {
         stats: statsRes.data,
-        resources: resourcesRes.data,
         mealData: mealRes.data,
         resourceData: resourceAllocRes.data,
       };
