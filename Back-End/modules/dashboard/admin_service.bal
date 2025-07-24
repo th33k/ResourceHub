@@ -372,7 +372,7 @@ service /dashboard/admin on database:dashboardListener {
         return result;
     }
 
-    // Get most requested asset data
+    // Get top 3 most requested assets data
     resource function get mostrequestedasset(http:Request req) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
@@ -381,7 +381,7 @@ service /dashboard/admin on database:dashboardListener {
 
         int orgId = check common:getOrgId(payload);
 
-        // Query to get the most requested asset
+        // Query to get the top 3 most requested assets
         stream<record {|string asset_name; string category; int request_count;|}, sql:Error?> mostRequestedStream = database:dbClient->query(
             `SELECT a.asset_name, a.category, COUNT(ra.requestedasset_id) AS request_count
              FROM assets a
@@ -389,26 +389,28 @@ service /dashboard/admin on database:dashboardListener {
              WHERE a.org_id = ${orgId}
              GROUP BY a.asset_id, a.asset_name, a.category
              ORDER BY request_count DESC
-             LIMIT 1`,
+             LIMIT 3`,
             typeof ({asset_name: "", category: "", request_count: 0})
         );
 
-        // Get the result
-        record {|string asset_name; string category; int request_count;|}? mostRequested = ();
+        // Get the results
+        record {|string asset_name; string category; int request_count;|}[] topAssets = [];
         check from var row in mostRequestedStream
             do {
-                mostRequested = row;
+                topAssets.push(row);
             };
 
-        if mostRequested is () {
-            return {
-                "asset_name": "No assets found",
-                "category": "",
-                "request_count": 0
-            };
+        if topAssets.length() == 0 {
+            return [
+                {
+                    "asset_name": "No assets found",
+                    "category": "",
+                    "request_count": 0
+                }
+            ];
         }
 
-        return mostRequested;
+        return topAssets;
     }
 
     // NEW: Meal type distribution for a selected date (pie chart)

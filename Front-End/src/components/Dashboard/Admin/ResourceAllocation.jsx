@@ -77,10 +77,10 @@ export const ResourceAllocation = ({ data, mostRequestedAsset }) => {
         <Doughnut data={chartData} options={options} />
       </div>
       
-      {/* Most Requested Asset Section */}
-      {mostRequestedAsset && (
+      {/* Top 3 Most Requested Assets Section */}
+      {mostRequestedAsset && mostRequestedAsset.length > 0 && (
         <div 
-          className="mt-4 w-full text-center p-3 rounded-lg"
+          className="mt-4 w-full"
           style={{
             backgroundColor: theme.palette.mode === 'dark' 
               ? 'rgba(59, 130, 246, 0.1)' 
@@ -91,24 +91,67 @@ export const ResourceAllocation = ({ data, mostRequestedAsset }) => {
           }}
         >
           <h3 
-            className="text-sm font-semibold mb-1"
-            style={{ color: theme.palette.text.primary }}
+            className="text-sm font-semibold mb-3 text-center p-2 border-b"
+            style={{ 
+              color: theme.palette.text.primary,
+              borderColor: theme.palette.mode === 'dark' 
+                ? 'rgba(59, 130, 246, 0.3)' 
+                : 'rgba(59, 130, 246, 0.2)'
+            }}
           >
-            Most Requested Asset
+            Top 3 Most Requested Assets
           </h3>
-          <p 
-            className="text-lg font-bold"
-            style={{ color: theme.palette.primary.main }}
-          >
-            {mostRequestedAsset.asset_name}
-          </p>
-          <p 
-            className="text-xs"
-            style={{ color: theme.palette.text.secondary }}
-          >
-            {mostRequestedAsset.request_count} request{mostRequestedAsset.request_count !== 1 ? 's' : ''}
-            {mostRequestedAsset.category && ` • ${mostRequestedAsset.category}`}
-          </p>
+          <div className="px-3 pb-3 space-y-2">
+            {mostRequestedAsset.slice(0, 3).map((asset, index) => (
+              <div 
+                key={index} 
+                className="flex items-center justify-between p-2 rounded"
+                style={{
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.05)' 
+                    : 'rgba(255, 255, 255, 0.7)',
+                }}
+              >
+                <div className="flex items-center space-x-2">
+                  <span 
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      backgroundColor: index === 0 
+                        ? '#FFD700' 
+                        : index === 1 
+                        ? '#C0C0C0' 
+                        : '#CD7F32',
+                      color: '#000'
+                    }}
+                  >
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p 
+                      className="text-sm font-medium"
+                      style={{ color: theme.palette.text.primary }}
+                    >
+                      {asset.asset_name}
+                    </p>
+                    {asset.category && (
+                      <p 
+                        className="text-xs"
+                        style={{ color: theme.palette.text.secondary }}
+                      >
+                        {asset.category}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <span 
+                  className="text-sm font-semibold"
+                  style={{ color: theme.palette.primary.main }}
+                >
+                  {asset.request_count}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
