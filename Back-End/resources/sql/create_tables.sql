@@ -4,7 +4,13 @@ CREATE TABLE organizations (
     org_name VARCHAR(50),
     org_address VARCHAR(255),
     org_logo TEXT,
-    org_email VARCHAR(50)
+    org_email VARCHAR(50),
+    org_about TEXT,
+    org_website VARCHAR(255),
+    org_phone VARCHAR(50),
+    org_founded VARCHAR(20),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 
 -- Users Table
@@ -125,4 +131,12 @@ CREATE TABLE schedulereports (
     org_id INT,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE CASCADE
+);
+
+CREATE TABLE mealtime_mealtype (
+    mealtime_id INT,
+    mealtype_id INT,
+    PRIMARY KEY (mealtime_id, mealtype_id),
+    FOREIGN KEY (mealtime_id) REFERENCES mealtimes(mealtime_id) ON DELETE CASCADE,
+    FOREIGN KEY (mealtype_id) REFERENCES mealtypes(mealtype_id) ON DELETE CASCADE
 );

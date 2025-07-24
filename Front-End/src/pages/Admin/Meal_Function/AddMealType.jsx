@@ -94,6 +94,7 @@ function AddMealType() {
                 mealId={meal.mealtype_id}
                 name={meal.mealtype_name}
                 image={meal.mealtype_image_url || '/default-meal.png'}
+                mealtime_ids={meal.mealtime_ids || []}
                 onDelete={handleDelete}
               />
             ))

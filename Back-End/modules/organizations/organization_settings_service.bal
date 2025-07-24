@@ -38,7 +38,11 @@ service /orgsettings on database:mainListener {
             SELECT org_name,
             org_email,
             org_logo,
-            org_address
+            org_address,
+            org_about,
+            org_website,
+            org_phone,
+            org_founded
             FROM organizations
             WHERE org_id = ${orgid}`);
 
@@ -70,8 +74,9 @@ service /orgsettings on database:mainListener {
 
         // Step 1: Create the organization first
         sql:ExecutionResult result = check database:dbClient->execute(`
-            INSERT INTO organizations (org_name,org_email)
-            VALUES (${register.org_name}, ${register.email})
+            INSERT INTO organizations (org_name, org_email, org_about, org_website, org_phone, org_founded, created_at, updated_at)
+            VALUES (${register.org_name}, ${register.email}, ${register.org_about ?: ""}, 
+                    ${register.org_website ?: ""}, ${register.org_phone ?: ""}, ${register.org_founded ?: ""}, NOW(), NOW())
         `);
 
         // Step 2: Get the newly created organization ID
@@ -121,7 +126,12 @@ service /orgsettings on database:mainListener {
             UPDATE organizations 
             SET org_name = ${profile.org_name}, 
                 org_logo = ${profile.org_logo}, 
-                org_address = ${profile.org_address ?: ""}
+                org_address = ${profile.org_address ?: ""},
+                org_about = ${profile.org_about ?: ""},
+                org_website = ${profile.org_website ?: ""},
+                org_phone = ${profile.org_phone ?: ""},
+                org_founded = ${profile.org_founded ?: ""},
+                updated_at = NOW()
             WHERE org_id = ${orgid}
         `);
 
@@ -149,13 +159,62 @@ service /orgsettings on database:mainListener {
         }
 
         sql:ExecutionResult result = check database:dbClient->execute(`
-            UPDATE organizations SET org_email = ${email.email} WHERE org_id = ${orgid}
+            UPDATE organizations SET org_email = ${email.email}, updated_at = NOW() WHERE org_id = ${orgid}
         `);
 
         if result.affectedRowCount > 0 {
             return {message: "Organization email updated successfully"};
         } else {
             return error("Failed to update organization email or organization not found");
+        }
+    }
+
+    // Delete organization - ONLY SuperAdmin can delete organization (WARNING: This will delete ALL organization data)
+    resource function delete organization/[int orgid](http:Request req) returns json|error {
+        jwt:Payload payload = check common:getValidatedPayload(req);
+
+        // Only allow SuperAdmin to delete organization
+        if (!common:hasAnyRole(payload, ["SuperAdmin"])) {
+            return error("Forbidden: Only SuperAdmin can delete an organization");
+        }
+
+        int userOrgId = check common:getOrgId(payload);
+
+        // Ensure SuperAdmin can only delete their own organization
+        if (orgid != userOrgId) {
+            return error("Forbidden: You can only delete your own organization");
+        }
+
+        // Check if organization exists before attempting deletion
+        stream<record {|int count;|}, sql:Error?> orgCheckStream =
+            database:dbClient->query(`SELECT COUNT(*) as count FROM organizations WHERE org_id = ${orgid}`);
+
+        record {|int count;|}[] orgCheckResult = [];
+        check orgCheckStream.forEach(function(record {|int count;|} result) {
+            orgCheckResult.push(result);
+        });
+
+        if (orgCheckResult.length() == 0 || orgCheckResult[0].count == 0) {
+            return error("Organization not found");
+        }
+
+        // WARNING: This will CASCADE DELETE all related data:
+        // - All users in the organization
+        // - All assets, meal times, meal types
+        // - All requests (meals, assets, maintenance)
+        // - All notifications and reports
+        // This action is IRREVERSIBLE
+        sql:ExecutionResult result = check database:dbClient->execute(`
+            DELETE FROM organizations WHERE org_id = ${orgid}
+        `);
+
+        if result.affectedRowCount > 0 {
+            return {
+                message: "Organization and all associated data deleted successfully",
+                warning: "This action is irreversible. All users, assets, requests, and data have been permanently removed."
+            };
+        } else {
+            return error("Failed to delete organization");
         }
     }
 

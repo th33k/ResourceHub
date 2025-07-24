@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { User, Camera, FileText, Save } from 'lucide-react';
+import { User, FileText, Save } from 'lucide-react';
 import { BASE_URLS } from '../../services/api/config';
 import { getAuthHeader } from '../../utils/authHeader';
 import { useUser, decodeToken } from '../../contexts/UserContext';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import ConfirmationDialog from './ConfirmationDialog';
+import ImageUpload from './ImageUpload';
 import './Styles/SettingsComponents.css';
 
 const ProfileSection = () => {
   // State to store form data
   const [formData, setFormData] = useState({ name: '', picture: '', bio: '' });
-
+  // State for file upload functionality
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   // Loading and error states for async data fetching
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,6 +77,52 @@ const ProfileSection = () => {
     fetchUserData();
   }, [userId]);
 
+  // Handle file selection and create preview URL
+  const handleImageChange = (file, url = null) => {
+    if (file) {
+      setImageFile(file);
+      const fileURL = URL.createObjectURL(file); // Preview image
+      setFormData({ ...formData, picture: fileURL });
+    } else if (url) {
+      setImageFile(null);
+      setFormData({ ...formData, picture: url });
+    }
+  };
+
+  // Upload selected image to Cloudinary and return URL
+  const uploadImageToCloudinary = async () => {
+    if (!imageFile) {
+      return formData.picture; // Return existing URL if no new file
+    }
+    setUploading(true);
+    const formData_upload = new FormData();
+    formData_upload.append('file', imageFile);
+    formData_upload.append(
+      'upload_preset',
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
+    formData_upload.append(
+      'cloud_name',
+      import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+    );
+
+    try {
+      const response = await fetch(import.meta.env.VITE_CLOUDINARY_API_URL, {
+        method: 'POST',
+        body: formData_upload,
+      });
+
+      const data = await response.json();
+      setUploading(false);
+      return data.secure_url; // Return uploaded image URL
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setUploading(false);
+      toast.error('Image upload failed. Please try again.');
+      return null;
+    }
+  };
+
   // Handle changes in form inputs
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -95,12 +144,17 @@ const ProfileSection = () => {
         try {
           // Use fallback userId (from context or decoded token)
           if (!userId) throw new Error('User ID not found');
+
+          // Upload image if file is selected
+          const imageUrl = await uploadImageToCloudinary();
+          if (imageFile && !imageUrl) return; // Stop if upload failed
+
           // Send profile update request
           await axios.put(
             `${BASE_URLS.settings}/profile/${userId}`,
             {
               username: formData.name,
-              profile_picture_url: formData.picture,
+              profile_picture_url: imageUrl || formData.picture,
               bio: formData.bio,
             },
             {
@@ -109,6 +163,15 @@ const ProfileSection = () => {
               },
             },
           );
+
+          // Update formData with the uploaded URL
+          if (imageUrl) {
+            setFormData((prev) => ({ ...prev, picture: imageUrl }));
+          }
+
+          // Clear file selection after successful upload
+          setImageFile(null);
+
           toast.success('Profile updated successfully!');
           // Close dialog after successful update
           setConfirmationDialog({ open: false, message: '', onConfirm: null });
@@ -145,13 +208,13 @@ const ProfileSection = () => {
         >
           Customize your profile information and appearance
         </p>
-        {formData.picture && (
-          <img
-            src={formData.picture}
-            alt="Profile"
-            onError={() => toast.error('Invalid image URL')}
-          />
-        )}
+        <ImageUpload
+          currentImage={formData.picture}
+          onImageChange={handleImageChange}
+          uploading={uploading}
+          isProfile={true}
+          alt="Profile Picture"
+        />
       </div>
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-group">
@@ -174,27 +237,6 @@ const ProfileSection = () => {
             onChange={handleChange}
             placeholder="Enter your display name"
             required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            <Camera
-              size={18}
-              style={{
-                marginRight: '8px',
-                verticalAlign: 'middle',
-                display: 'inline',
-              }}
-            />
-            Profile Picture URL
-          </label>
-          <input
-            className="form-input"
-            type="url"
-            name="picture"
-            value={formData.picture}
-            onChange={handleChange}
-            placeholder="Enter profile picture URL"
           />
         </div>
         <div className="form-group">
@@ -229,9 +271,9 @@ const ProfileSection = () => {
             {formData.bio.length}/150 characters
           </small>
         </div>
-        <button type="submit">
+        <button type="submit" disabled={uploading}>
           <Save size={18} />
-          Save Profile
+          {uploading ? 'Uploading...' : 'Save Profile'}
         </button>
       </form>
       {confirmationDialog.open && (
