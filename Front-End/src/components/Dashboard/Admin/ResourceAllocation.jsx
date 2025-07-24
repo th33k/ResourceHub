@@ -8,43 +8,6 @@ import { useTheme } from '@mui/material';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const options = {
-  plugins: {
-    legend: {
-      position: 'bottom',
-    },
-    tooltip: {
-      callbacks: {
-        label: function (tooltipItem) {
-          return `${tooltipItem.label}: ${tooltipItem.raw} available`;
-        },
-        title: function (tooltipItems) {
-          return 'Available Resources';
-        },
-        afterLabel: function (tooltipItem) {
-          const total = tooltipItem.dataset.data.reduce((sum, value) => sum + value, 0);
-          const percentage = ((tooltipItem.raw / total) * 100).toFixed(1);
-          return `${percentage}% of total available`;
-        },
-      },
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      titleColor: '#fff',
-      bodyColor: '#fff',
-      borderColor: 'rgba(255, 255, 255, 0.1)',
-      borderWidth: 1,
-      cornerRadius: 8,
-      displayColors: true,
-    },
-  },
-  interaction: {
-    intersect: false,
-    mode: 'index',
-  },
-  onHover: (event, elements) => {
-    event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-  },
-};
-
 const COLORS = [
   'rgb(59, 130, 246)', // Blue
   'rgb(16, 185, 129)', // Green
@@ -75,6 +38,7 @@ export const ResourceAllocation = ({ date }) => {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [data, setData] = useState(null);
+  const [assetDetails, setAssetDetails] = useState(null); // Store detailed asset info
   const [mostRequestedAssets, setMostRequestedAssets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,18 +46,23 @@ export const ResourceAllocation = ({ date }) => {
   useEffect(() => {
     setLoading(true);
     
-    // Fetch both resource allocation and most requested assets
+    // Fetch both resource allocation and most requested assets, plus asset details
     Promise.all([
       axios.get(`${BASE_URLS.dashboardAdmin}/resourceallocation?date=${selectedDate}`, {
         headers: { ...getAuthHeader() },
       }),
       axios.get(`${BASE_URLS.dashboardAdmin}/mostrequestedasset?date=${selectedDate}`, {
         headers: { ...getAuthHeader() },
+      }),
+      // Fetch all assets to get names by category
+      axios.get(`${BASE_URLS.asset}/details`, {
+        headers: { ...getAuthHeader() },
       })
     ])
-      .then(([resourceRes, topAssetsRes]) => {
+      .then(([resourceRes, topAssetsRes, allAssetsRes]) => {
         setData(resourceRes.data);
         setMostRequestedAssets(topAssetsRes.data);
+        setAssetDetails(allAssetsRes.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -189,6 +158,74 @@ export const ResourceAllocation = ({ date }) => {
       </div>
     );
   } else {
+    // Group asset names by category
+    const assetNamesByCategory = {};
+    
+    if (assetDetails && assetDetails.length > 0) {
+      assetDetails.forEach(asset => {
+        const category = asset.category;
+        if (!assetNamesByCategory[category]) {
+          assetNamesByCategory[category] = [];
+        }
+        if (asset.asset_name && !assetNamesByCategory[category].includes(asset.asset_name)) {
+          assetNamesByCategory[category].push(asset.asset_name);
+        }
+      });
+    }
+
+    // Create options with access to asset names
+    const chartOptions = {
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+        tooltip: {
+          callbacks: {
+            label: function (tooltipItem) {
+              return `${tooltipItem.label}: ${tooltipItem.raw} available`;
+            },
+            title: function (tooltipItems) {
+              return 'Available Resources';
+            },
+            afterLabel: function (tooltipItem) {
+              const total = tooltipItem.dataset.data.reduce((sum, value) => sum + value, 0);
+              const percentage = ((tooltipItem.raw / total) * 100).toFixed(1);
+              const percentageText = `${percentage}% of total available`;
+              
+              // Get asset names for this category from the data
+              const categoryName = tooltipItem.label;
+              const assetNames = assetNamesByCategory[categoryName];
+              
+              if (assetNames && assetNames.length > 0) {
+                const assetNamesText = `Assets: ${assetNames.join(', ')}`;
+                return [percentageText, assetNamesText];
+              }
+              
+              return percentageText;
+            },
+          },
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: true,
+          bodySpacing: 4,
+          titleSpacing: 4,
+          footerSpacing: 4,
+          padding: 12,
+        },
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+      },
+    };
+
     const chartData = {
       labels: data.map((item) => item.category),
       datasets: [
@@ -202,7 +239,8 @@ export const ResourceAllocation = ({ date }) => {
         },
       ],
     };
-    chartContent = <Doughnut data={chartData} options={options} />;
+    
+    chartContent = <Doughnut data={chartData} options={chartOptions} />;
   }
 
   return (
