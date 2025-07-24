@@ -76,7 +76,7 @@ const AdminDashboard = () => {
     );
   }
 
-  const { stats, resources, mealData } = data;
+  const { stats, resources } = data;
   // Both MealTimeDistribution and ResourceAllocation now have their own date pickers
   // and fetch data independently based on selected dates
 
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
             <ResourceAllocation />
           </div>
           <div className="flex flex-col h-full lg:col-span-3">
-            <MealDistributionChart data={mealData} />
+            <MealDistributionChart />
           </div>
           <div className="flex flex-col h-full lg:col-span-1">
             <MealTypeDistribution />

@@ -199,7 +199,7 @@ service /dashboard/admin on database:dashboardListener {
     }
 
     // MEAL DASHBOARD OPERATIONS
-    // Resource to get meal distribution data for pie chart
+    // Resource to get meal distribution data for line chart
     resource function get mealdistribution(http:Request req) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
@@ -207,6 +207,20 @@ service /dashboard/admin on database:dashboardListener {
         }
 
         int orgId = check common:getOrgId(payload);
+
+        // Get date from query param, default to today if not provided
+        map<string[]> queryParams = req.getQueryParams();
+        string date = "";
+        if queryParams.hasKey("date") {
+            string[]? dateArrOpt = queryParams["date"];
+            if dateArrOpt is string[] && dateArrOpt.length() > 0 {
+                date = dateArrOpt[0];
+            }
+        }
+        if date == "" {
+            time:Civil civilNow = time:utcToCivil(time:utcNow());
+            date = string `${civilNow.year}-${civilNow.month < 10 ? "0" : ""}${civilNow.month}-${civilNow.day < 10 ? "0" : ""}${civilNow.day}`;
+        }
 
         // Query to get all meal types from mealtimes
         stream<MealTime, sql:Error?> mealTimeStream = database:dbClient->query(
@@ -221,12 +235,40 @@ service /dashboard/admin on database:dashboardListener {
                 mealTimes.push(row);
             };
 
-        // Query to get meal event counts by date and meal type for 8 days (past 6 days, today, tomorrow)
+        // Prepare 8 days: past 6 days from selected date, selected date, next day
+        time:Civil civilDate = check time:civilFromString(date + "T00:00:00.000Z");
+        time:Utc baseUtc = check time:utcFromCivil(civilDate);
+        int secondsInDay = 86400;
+        time:Utc startUtc = time:utcAddSeconds(baseUtc, <time:Seconds>(-6 * secondsInDay));
+
+        // Build 8 consecutive dates (YYYY-MM-DD) and day labels
+        string[] dateKeys = [];
+        string[] dayLabels = [];
+        foreach int i in 0 ... 7 {
+            time:Utc dUtc = time:utcAddSeconds(startUtc, <time:Seconds>(i * secondsInDay));
+            time:Civil dCivil = time:utcToCivil(dUtc);
+            string dateKey = string `${dCivil.year}-${dCivil.month < 10 ? "0" : ""}${dCivil.month}-${dCivil.day < 10 ? "0" : ""}${dCivil.day}`;
+            dateKeys.push(dateKey);
+            
+            string dayLabel = "";
+            match dCivil.dayOfWeek {
+                time:SUNDAY => { dayLabel = i == 6 ? "Sun (Selected)" : i == 7 ? "Sun (Tomorrow)" : "Sun"; }
+                time:MONDAY => { dayLabel = i == 6 ? "Mon (Selected)" : i == 7 ? "Mon (Tomorrow)" : "Mon"; }
+                time:TUESDAY => { dayLabel = i == 6 ? "Tue (Selected)" : i == 7 ? "Tue (Tomorrow)" : "Tue"; }
+                time:WEDNESDAY => { dayLabel = i == 6 ? "Wed (Selected)" : i == 7 ? "Wed (Tomorrow)" : "Wed"; }
+                time:THURSDAY => { dayLabel = i == 6 ? "Thu (Selected)" : i == 7 ? "Thu (Tomorrow)" : "Thu"; }
+                time:FRIDAY => { dayLabel = i == 6 ? "Fri (Selected)" : i == 7 ? "Fri (Tomorrow)" : "Fri"; }
+                time:SATURDAY => { dayLabel = i == 6 ? "Sat (Selected)" : i == 7 ? "Sat (Tomorrow)" : "Sat"; }
+            }
+            dayLabels.push(dayLabel);
+        }
+
+        // Query to get meal event counts by date and meal type for 8 days based on selected date
         stream<MealDistributionData, sql:Error?> mealDistributionStream = database:dbClient->query(
         `SELECT DATE(meal_request_date) AS meal_date, DAYOFWEEK(meal_request_date) AS day_of_week, mealtimes.mealtime_name, COUNT(requestedmeal_id) AS count 
          FROM requestedmeals 
          JOIN mealtimes ON requestedmeals.meal_time_id = mealtimes.mealtime_id
-         WHERE requestedmeals.org_id = ${orgId} AND meal_request_date BETWEEN CURDATE() - INTERVAL 6 DAY AND CURDATE() + INTERVAL 1 DAY
+         WHERE requestedmeals.org_id = ${orgId} AND DATE(meal_request_date) BETWEEN DATE_SUB(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 6 DAY) AND DATE_ADD(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 1 DAY)
          GROUP BY meal_date, DAYOFWEEK(meal_request_date), mealtimes.mealtime_name
          ORDER BY meal_date, mealtimes.mealtime_name`,
         MealDistributionData
@@ -238,49 +280,6 @@ service /dashboard/admin on database:dashboardListener {
             do {
                 mealDistributionData.push(row);
             };
-
-        // Prepare 8 days: past 6 days, today, tomorrow
-        time:Utc utcNow = time:utcNow();
-        // Removed unused variable currentTime
-        int secondsInDay = 86400;
-        time:Utc startUtc = time:utcAddSeconds(utcNow, <time:Seconds>(-6 * secondsInDay));
-        // Removed unused variable startCivil
-
-        // Build 8 consecutive dates (YYYY-MM-DD) and day labels
-        string[] dateKeys = [];
-        string[] dayLabels = [];
-        foreach int i in 0 ... 7 {
-            time:Utc dUtc = time:utcAddSeconds(startUtc, <time:Seconds>(i * secondsInDay));
-            time:Civil dCivil = time:utcToCivil(dUtc);
-            string dateKey = string `${dCivil.year}-${dCivil.month < 10 ? "0" : ""}${dCivil.month}-${dCivil.day < 10 ? "0" : ""}${dCivil.day}`;
-            dateKeys.push(dateKey);
-            match dCivil.dayOfWeek {
-                time:SUNDAY => {
-                    dayLabels.push("Sun");
-                }
-                time:MONDAY => {
-                    dayLabels.push("Mon");
-                }
-                time:TUESDAY => {
-                    dayLabels.push("Tue");
-                }
-                time:WEDNESDAY => {
-                    dayLabels.push("Wed");
-                }
-                time:THURSDAY => {
-                    dayLabels.push("Thu");
-                }
-                time:FRIDAY => {
-                    dayLabels.push("Fri");
-                }
-                time:SATURDAY => {
-                    dayLabels.push("Sat");
-                }
-                _ => {
-                    dayLabels.push("");
-                }
-            }
-        }
 
         // Initialize a map to store data arrays for each meal type (8 days)
         map<int[]> mealDataMap = {};
@@ -544,6 +543,250 @@ service /dashboard/admin on database:dashboardListener {
         return {
             "date": date,
             "data": result
+        };
+    }
+
+    // NEW: Asset distribution data for line chart based on selected date
+    resource function get assetdistribution(http:Request req) returns json|error {
+        jwt:Payload payload = check common:getValidatedPayload(req);
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
+            return error("Forbidden: You do not have permission to access this resource");
+        }
+
+        int orgId = check common:getOrgId(payload);
+
+        // Get date from query param, default to today if not provided
+        map<string[]> queryParams = req.getQueryParams();
+        string date = "";
+        if queryParams.hasKey("date") {
+            string[]? dateArrOpt = queryParams["date"];
+            if dateArrOpt is string[] && dateArrOpt.length() > 0 {
+                date = dateArrOpt[0];
+            }
+        }
+        if date == "" {
+            time:Civil civilNow = time:utcToCivil(time:utcNow());
+            date = string `${civilNow.year}-${civilNow.month < 10 ? "0" : ""}${civilNow.month}-${civilNow.day < 10 ? "0" : ""}${civilNow.day}`;
+        }
+
+        // Prepare 8 days: past 6 days from selected date, selected date, next day
+        time:Civil civilDate = check time:civilFromString(date + "T00:00:00.000Z");
+        time:Utc baseUtc = check time:utcFromCivil(civilDate);
+        int secondsInDay = 86400;
+        time:Utc startUtc = time:utcAddSeconds(baseUtc, <time:Seconds>(-6 * secondsInDay));
+
+        // Build 8 consecutive dates (YYYY-MM-DD) and day labels
+        string[] dateKeys = [];
+        string[] dayLabels = [];
+        foreach int i in 0 ... 7 {
+            time:Utc dUtc = time:utcAddSeconds(startUtc, <time:Seconds>(i * secondsInDay));
+            time:Civil dCivil = time:utcToCivil(dUtc);
+            string dateKey = string `${dCivil.year}-${dCivil.month < 10 ? "0" : ""}${dCivil.month}-${dCivil.day < 10 ? "0" : ""}${dCivil.day}`;
+            dateKeys.push(dateKey);
+            
+            string dayLabel = "";
+            match dCivil.dayOfWeek {
+                time:SUNDAY => { dayLabel = i == 6 ? "Sun (Selected)" : i == 7 ? "Sun (Tomorrow)" : "Sun"; }
+                time:MONDAY => { dayLabel = i == 6 ? "Mon (Selected)" : i == 7 ? "Mon (Tomorrow)" : "Mon"; }
+                time:TUESDAY => { dayLabel = i == 6 ? "Tue (Selected)" : i == 7 ? "Tue (Tomorrow)" : "Tue"; }
+                time:WEDNESDAY => { dayLabel = i == 6 ? "Wed (Selected)" : i == 7 ? "Wed (Tomorrow)" : "Wed"; }
+                time:THURSDAY => { dayLabel = i == 6 ? "Thu (Selected)" : i == 7 ? "Thu (Tomorrow)" : "Thu"; }
+                time:FRIDAY => { dayLabel = i == 6 ? "Fri (Selected)" : i == 7 ? "Fri (Tomorrow)" : "Fri"; }
+                time:SATURDAY => { dayLabel = i == 6 ? "Sat (Selected)" : i == 7 ? "Sat (Tomorrow)" : "Sat"; }
+            }
+            dayLabels.push(dayLabel);
+        }
+
+        // Query to get distinct asset categories
+        stream<record {|string category;|}, sql:Error?> categoryStream = database:dbClient->query(
+            `SELECT DISTINCT a.category
+             FROM assets a
+             WHERE a.org_id = ${orgId}
+             ORDER BY a.category`,
+            typeof ({category: ""})
+        );
+
+        // Convert category stream to array
+        string[] categories = [];
+        check from var row in categoryStream
+            do {
+                categories.push(row.category);
+            };
+
+        // Query to get asset request counts by date and category for 8 days
+        stream<record {|string request_date; string category; int count;|}, sql:Error?> assetDistributionStream = database:dbClient->query(
+            `SELECT DATE(ra.submitted_date) AS request_date, a.category, COUNT(ra.requestedasset_id) AS count 
+             FROM requestedassets ra
+             JOIN assets a ON ra.asset_id = a.asset_id
+             WHERE ra.org_id = ${orgId} AND DATE(ra.submitted_date) BETWEEN DATE_SUB(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 6 DAY) AND DATE_ADD(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 1 DAY)
+             GROUP BY request_date, a.category
+             ORDER BY request_date, a.category`,
+            typeof ({request_date: "", category: "", count: 0})
+        );
+
+        // Convert asset distribution stream to array
+        record {|string request_date; string category; int count;|}[] assetDistributionData = [];
+        check from var row in assetDistributionStream
+            do {
+                assetDistributionData.push(row);
+            };
+
+        // Initialize a map to store data arrays for each category (8 days)
+        map<int[]> assetDataMap = {};
+        foreach var category in categories {
+            assetDataMap[category] = [0, 0, 0, 0, 0, 0, 0, 0];
+        }
+
+        // Populate data arrays based on category and request_date
+        foreach var row in assetDistributionData {
+            string requestDate = row.request_date;
+            string category = row.category;
+            int count = row.count;
+            int? idxOpt = dateKeys.indexOf(requestDate);
+            if idxOpt is int {
+                int[]? dataArr = assetDataMap[category];
+                if (dataArr is int[]) {
+                    dataArr[idxOpt] = count;
+                }
+            }
+        }
+
+        json[] datasets = [];
+        string[] borderColors = ["#4C51BF", "#38B2AC", "#ED8936", "#E53E3E", "#805AD5", "#319795", "#DD6B20"];
+        int colorIndex = 0;
+
+        foreach var category in categories {
+            int[]? dataArr = assetDataMap[category];
+            if (dataArr is int[]) {
+                datasets.push({
+                    "label": category,
+                    "data": dataArr,
+                    "borderColor": borderColors[colorIndex % borderColors.length()],
+                    "tension": 0.4
+                });
+                colorIndex += 1;
+            }
+        }
+
+        // Construct the JSON response
+        return {
+            "labels": dayLabels,
+            "datasets": datasets
+        };
+    }
+
+    // NEW: Services distribution data for line chart based on selected date
+    resource function get servicesdistribution(http:Request req) returns json|error {
+        jwt:Payload payload = check common:getValidatedPayload(req);
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
+            return error("Forbidden: You do not have permission to access this resource");
+        }
+
+        int orgId = check common:getOrgId(payload);
+
+        // Get date from query param, default to today if not provided
+        map<string[]> queryParams = req.getQueryParams();
+        string date = "";
+        if queryParams.hasKey("date") {
+            string[]? dateArrOpt = queryParams["date"];
+            if dateArrOpt is string[] && dateArrOpt.length() > 0 {
+                date = dateArrOpt[0];
+            }
+        }
+        if date == "" {
+            time:Civil civilNow = time:utcToCivil(time:utcNow());
+            date = string `${civilNow.year}-${civilNow.month < 10 ? "0" : ""}${civilNow.month}-${civilNow.day < 10 ? "0" : ""}${civilNow.day}`;
+        }
+
+        // Prepare 8 days: past 6 days from selected date, selected date, next day
+        time:Civil civilDate = check time:civilFromString(date + "T00:00:00.000Z");
+        time:Utc baseUtc = check time:utcFromCivil(civilDate);
+        int secondsInDay = 86400;
+        time:Utc startUtc = time:utcAddSeconds(baseUtc, <time:Seconds>(-6 * secondsInDay));
+
+        // Build 8 consecutive dates (YYYY-MM-DD) and day labels
+        string[] dateKeys = [];
+        string[] dayLabels = [];
+        foreach int i in 0 ... 7 {
+            time:Utc dUtc = time:utcAddSeconds(startUtc, <time:Seconds>(i * secondsInDay));
+            time:Civil dCivil = time:utcToCivil(dUtc);
+            string dateKey = string `${dCivil.year}-${dCivil.month < 10 ? "0" : ""}${dCivil.month}-${dCivil.day < 10 ? "0" : ""}${dCivil.day}`;
+            dateKeys.push(dateKey);
+            
+            string dayLabel = "";
+            match dCivil.dayOfWeek {
+                time:SUNDAY => { dayLabel = i == 6 ? "Sun (Selected)" : i == 7 ? "Sun (Tomorrow)" : "Sun"; }
+                time:MONDAY => { dayLabel = i == 6 ? "Mon (Selected)" : i == 7 ? "Mon (Tomorrow)" : "Mon"; }
+                time:TUESDAY => { dayLabel = i == 6 ? "Tue (Selected)" : i == 7 ? "Tue (Tomorrow)" : "Tue"; }
+                time:WEDNESDAY => { dayLabel = i == 6 ? "Wed (Selected)" : i == 7 ? "Wed (Tomorrow)" : "Wed"; }
+                time:THURSDAY => { dayLabel = i == 6 ? "Thu (Selected)" : i == 7 ? "Thu (Tomorrow)" : "Thu"; }
+                time:FRIDAY => { dayLabel = i == 6 ? "Fri (Selected)" : i == 7 ? "Fri (Tomorrow)" : "Fri"; }
+                time:SATURDAY => { dayLabel = i == 6 ? "Sat (Selected)" : i == 7 ? "Sat (Tomorrow)" : "Sat"; }
+            }
+            dayLabels.push(dayLabel);
+        }
+
+        // Query to get maintenance request counts by date for 8 days, categorized by priority/type
+        stream<record {|string request_date; string priority; int count;|}, sql:Error?> serviceDistributionStream = database:dbClient->query(
+            `SELECT DATE(submitted_date) AS request_date, priority, COUNT(maintenance_id) AS count 
+             FROM maintenance 
+             WHERE org_id = ${orgId} AND DATE(submitted_date) BETWEEN DATE_SUB(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 6 DAY) AND DATE_ADD(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 1 DAY)
+             GROUP BY request_date, priority
+             ORDER BY request_date, priority`,
+            typeof ({request_date: "", priority: "", count: 0})
+        );
+
+        // Convert service distribution stream to array
+        record {|string request_date; string priority; int count;|}[] serviceDistributionData = [];
+        check from var row in serviceDistributionStream
+            do {
+                serviceDistributionData.push(row);
+            };
+
+        // Get unique priorities
+        string[] priorities = ["Low", "Medium", "High", "Critical"];
+
+        // Initialize a map to store data arrays for each priority (8 days)
+        map<int[]> serviceDataMap = {};
+        foreach var priority in priorities {
+            serviceDataMap[priority] = [0, 0, 0, 0, 0, 0, 0, 0];
+        }
+
+        // Populate data arrays based on priority and request_date
+        foreach var row in serviceDistributionData {
+            string requestDate = row.request_date;
+            string priority = row.priority;
+            int count = row.count;
+            int? idxOpt = dateKeys.indexOf(requestDate);
+            if idxOpt is int {
+                int[]? dataArr = serviceDataMap[priority];
+                if (dataArr is int[]) {
+                    dataArr[idxOpt] = count;
+                }
+            }
+        }
+
+        json[] datasets = [];
+        string[] borderColors = ["#10B981", "#F59E0B", "#EF4444", "#7C3AED"]; // Green, Yellow, Red, Purple
+        int colorIndex = 0;
+
+        foreach var priority in priorities {
+            int[]? dataArr = serviceDataMap[priority];
+            if (dataArr is int[]) {
+                datasets.push({
+                    "label": priority + " Priority",
+                    "data": dataArr,
+                    "borderColor": borderColors[colorIndex % borderColors.length()],
+                    "tension": 0.4
+                });
+                colorIndex += 1;
+            }
+        }
+
+        // Construct the JSON response
+        return {
+            "labels": dayLabels,
+            "datasets": datasets
         };
     }
 
