@@ -246,14 +246,14 @@ export const ResourceAllocation = ({ date }) => {
       </div>
       
       {/* Top 3 Most Requested Assets Section */}
-      {mostRequestedAssets && mostRequestedAssets.length > 0 && (
-        <div className="w-full mt-4">
-          <h3
-            className="mb-3 text-sm font-medium text-center"
-            style={{ color: theme.palette.text.primary }}
-          >
-            Most Requested Assets Today
-          </h3>
+      <div className="w-full mt-4">
+        <h3
+          className="mb-3 text-sm font-medium text-center"
+          style={{ color: theme.palette.text.primary }}
+        >
+          Most Requested Assets Today
+        </h3>
+        {mostRequestedAssets && mostRequestedAssets.length > 0 ? (
           <div className="flex justify-center gap-4">
             {mostRequestedAssets.slice(0, 3).map((asset, index) => (
               <div
@@ -293,8 +293,15 @@ export const ResourceAllocation = ({ date }) => {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div
+            className="py-4 text-sm text-center"
+            style={{ color: theme.palette.text.secondary }}
+          >
+            No asset requests found for this date
+          </div>
+        )}
+      </div>
     </div>
   );
 };
