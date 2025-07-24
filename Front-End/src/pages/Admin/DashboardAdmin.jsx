@@ -77,7 +77,7 @@ const AdminDashboard = () => {
   }
 
   const { stats, resources, mealData, resourceData, mostRequestedAsset } = data;
-  // Optionally, you can add a date picker and pass date to MealTypeDistribution
+  // Optionally, you can add a date picker and pass date to MealTimeDistribution
   // For now, it defaults to today if not provided
 
   return (

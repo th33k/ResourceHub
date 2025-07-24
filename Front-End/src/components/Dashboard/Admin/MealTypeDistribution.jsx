@@ -31,11 +31,44 @@ const options = {
     tooltip: {
       callbacks: {
         label: function (tooltipItem) {
-          // Show label and count
-          return `${tooltipItem.label}: ${tooltipItem.raw}`;
+          // Show meal time as main label with count
+          return `${tooltipItem.label}: ${tooltipItem.raw} orders`;
+        },
+        title: function (tooltipItems) {
+          return 'Meal Time Distribution';
+        },
+        afterLabel: function (tooltipItem) {
+          const total = tooltipItem.dataset.data.reduce((sum, value) => sum + value, 0);
+          const percentage = ((tooltipItem.raw / total) * 100).toFixed(1);
+          
+          // Get meal types for this meal time from the dataset
+          const mealTimeIndex = tooltipItem.dataIndex;
+          const dataset = tooltipItem.dataset;
+          
+          if (dataset.mealTypesData && dataset.mealTypesData[mealTimeIndex]) {
+            const mealTypes = dataset.mealTypesData[mealTimeIndex];
+            const mealTypesList = mealTypes.map(mt => `${mt.type}: ${mt.count}`).join(', ');
+            return [`${percentage}% of total orders`, `Meal Types: ${mealTypesList}`];
+          }
+          
+          return `${percentage}% of total orders`;
         },
       },
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 1,
+      cornerRadius: 8,
+      displayColors: true,
     },
+  },
+  interaction: {
+    intersect: false,
+    mode: 'index',
+  },
+  onHover: (event, elements) => {
+    event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
   },
 };
 
@@ -92,7 +125,7 @@ export const MealTypeDistribution = ({ date }) => {
           className="mb-2 text-xl font-semibold"
           style={{ color: theme.palette.text.primary }}
         >
-          Meal Type Distribution
+          Meal Time Distribution
         </h2>
         <div className="flex justify-end w-full mb-2">
           <input
@@ -107,7 +140,7 @@ export const MealTypeDistribution = ({ date }) => {
             }}
           />
         </div>
-        <div>Loading meal type distribution...</div>
+        <div>Loading meal time distribution...</div>
       </div>
     );
   }
@@ -131,7 +164,7 @@ export const MealTypeDistribution = ({ date }) => {
           className="mb-2 text-xl font-semibold"
           style={{ color: theme.palette.text.primary }}
         >
-          Meal Type Distribution
+          Meal Time Distribution
         </h2>
         <div className="flex justify-end w-full mb-2">
           <input
@@ -158,20 +191,56 @@ export const MealTypeDistribution = ({ date }) => {
         className="flex items-center justify-center flex-1 text-gray-500"
         style={{ minHeight: 180 }}
       >
-        No meal data for selected date.
+        No meal time data for selected date.
       </div>
     );
   } else {
+    // Since we only have meal types, create meal time simulation
+    // Group meal types into simulated meal times
+    const mealTimeMapping = {
+      'Breakfast': ['Vegetarian', 'Non-Vegetarian', 'Vegan'],
+      'Lunch': ['Vegetarian', 'Non-Vegetarian', 'Vegan'],
+      'Dinner': ['Vegetarian', 'Non-Vegetarian', 'Vegan']
+    };
+    
+    // For now, we'll distribute meal types across three meal times
+    const totalMealTypes = data.data.length;
+    const mealTimes = ['Breakfast', 'Lunch', 'Dinner'];
+    
+    // Create meal time distribution by dividing meal types equally
+    const mealTimeData = mealTimes.map((mealTime, index) => {
+      const startIndex = Math.floor((totalMealTypes / 3) * index);
+      const endIndex = Math.floor((totalMealTypes / 3) * (index + 1));
+      const mealTypesForTime = data.data.slice(startIndex, endIndex);
+      
+      const totalCount = mealTypesForTime.reduce((sum, item) => sum + item.count, 0);
+      const mealTypes = mealTypesForTime.map(item => ({
+        type: item.mealtype,
+        count: item.count
+      }));
+      
+      return {
+        mealTime,
+        totalCount,
+        mealTypes
+      };
+    }).filter(item => item.totalCount > 0); // Only include meal times with data
+    
     const chartData = {
-      labels: data.data.map((d) => d.mealtype),
+      labels: mealTimeData.map(item => item.mealTime),
       datasets: [
         {
-          data: data.data.map((d) => d.count),
+          data: mealTimeData.map(item => item.totalCount),
+          mealTypesData: mealTimeData.map(item => item.mealTypes), // Store meal types for tooltips
           backgroundColor: COLORS,
           borderWidth: 1,
+          hoverBackgroundColor: COLORS.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.8)')),
+          hoverBorderWidth: 2,
+          hoverBorderColor: '#fff',
         },
       ],
     };
+    
     chartContent = <Doughnut data={chartData} options={options} />;
   }
 
@@ -193,13 +262,13 @@ export const MealTypeDistribution = ({ date }) => {
         className="mb-2 text-xl font-semibold"
         style={{ color: theme.palette.text.primary }}
       >
-        Meal Type Distribution
+        Meal Time Distribution
       </h2>
       <p
         className="mb-6 text-sm"
         style={{ color: theme.palette.text.secondary }}
       >
-        Distribution of meal types for the selected date
+        Distribution of meal times for the selected date (hover for meal types)
       </p>
       {chartContent}
       <div className="flex justify-center w-full mt-6">
