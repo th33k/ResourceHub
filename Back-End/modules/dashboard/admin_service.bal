@@ -728,11 +728,11 @@ service /dashboard/admin on database:dashboardListener {
 
         // Query to get maintenance request counts by date for 8 days, categorized by priority/type
         stream<record {|string request_date; string priority; int count;|}, sql:Error?> serviceDistributionStream = database:dbClient->query(
-            `SELECT DATE(submitted_date) AS request_date, priority, COUNT(maintenance_id) AS count 
+            `SELECT DATE(submitted_date) AS request_date, priority_level AS priority, COUNT(maintenance_id) AS count 
              FROM maintenance 
              WHERE org_id = ${orgId} AND DATE(submitted_date) BETWEEN DATE_SUB(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 6 DAY) AND DATE_ADD(STR_TO_DATE(${date}, '%Y-%m-%d'), INTERVAL 1 DAY)
-             GROUP BY request_date, priority
-             ORDER BY request_date, priority`,
+             GROUP BY request_date, priority_level
+             ORDER BY request_date, priority_level`,
             typeof ({request_date: "", priority: "", count: 0})
         );
 
