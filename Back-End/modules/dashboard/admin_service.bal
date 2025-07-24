@@ -331,48 +331,50 @@ service /dashboard/admin on database:dashboardListener {
     }
 
     // PIE CHART OPERATIONS
-    // Resource to get resource allocation data
+    // Resource to get resource allocation data for a selected date (available assets)
     resource function get resourceallocation(http:Request req) returns json|error {
-        jwt:Payload payload = check common:getValidatedPayload(req);
-        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
-            return error("Forbidden: You do not have permission to access this resource");
+        // Simplified error handling for debugging
+        do {
+            jwt:Payload payload = check common:getValidatedPayload(req);
+            if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
+                return error("Forbidden: You do not have permission to access this resource");
+            }
+
+            int orgId = check common:getOrgId(payload);
+
+            // Very simple query to test database connectivity
+            stream<record {|string category; int allocated;|}, sql:Error?> allocationStream = database:dbClient->query(
+            `SELECT 
+                category,
+                CAST(SUM(quantity) AS SIGNED) AS allocated
+             FROM assets
+             WHERE org_id = ${orgId}
+             GROUP BY category
+             ORDER BY category`,
+            typeof ({category: "", allocated: 0})
+            );
+
+            // Convert stream to array with error handling
+            json[] result = [];
+            error? streamError = from var row in allocationStream
+                do {
+                    result.push({
+                        "category": row.category,
+                        "allocated": row.allocated
+                    });
+                };
+            
+            if streamError is error {
+                return error("Database query failed: " + streamError.message());
+            }
+
+            return result;
+        } on fail var e {
+            return error("Resource allocation endpoint failed: " + e.message());
         }
-
-        int orgId = check common:getOrgId(payload);
-
-        // Query to get total and allocated quantities by category
-        stream<ResourceAllocationData, sql:Error?> allocationStream = database:dbClient->query(
-        `SELECT 
-            category,
-            SUM(quantity) AS total
-         FROM assets 
-         WHERE org_id = ${orgId}
-         GROUP BY category 
-         ORDER BY category`,
-        ResourceAllocationData
-        );
-
-        // Convert stream to array
-        ResourceAllocationData[] allocationData = [];
-        check from ResourceAllocationData row in allocationStream
-            do {
-                allocationData.push(row);
-            };
-
-        // Construct the JSON response
-        json[] result = [];
-        foreach var row in allocationData {
-            result.push({
-                "category": row.category,
-                "allocated": row.total,
-                "total": row.total
-            });
-        }
-
-        return result;
     }
 
-    // Get top 3 most requested assets data
+    // Get top 3 most requested assets data for a selected date
     resource function get mostrequestedasset(http:Request req) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);
         if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
@@ -381,13 +383,31 @@ service /dashboard/admin on database:dashboardListener {
 
         int orgId = check common:getOrgId(payload);
 
-        // Query to get the top 3 most requested assets
+        // Get date from query param, default to today if not provided
+        map<string[]> queryParams = req.getQueryParams();
+        string date = "";
+        if queryParams.hasKey("date") {
+            string[]? dateArrOpt = queryParams["date"];
+            if dateArrOpt is string[] && dateArrOpt.length() > 0 {
+                date = dateArrOpt[0];
+            }
+        }
+        if date == "" {
+            time:Civil civilNow = time:utcToCivil(time:utcNow());
+            date = string `${civilNow.year}-${civilNow.month < 10 ? "0" : ""}${civilNow.month}-${civilNow.day < 10 ? "0" : ""}${civilNow.day}`;
+        }
+
+        // Query to get the top 3 most requested assets for the selected date
         stream<record {|string asset_name; string category; int request_count;|}, sql:Error?> mostRequestedStream = database:dbClient->query(
             `SELECT a.asset_name, a.category, COUNT(ra.requestedasset_id) AS request_count
              FROM assets a
-             LEFT JOIN requestedassets ra ON a.asset_id = ra.asset_id AND ra.org_id = ${orgId}
+             LEFT JOIN requestedassets ra 
+               ON a.asset_id = ra.asset_id 
+               AND ra.org_id = ${orgId}
+               AND DATE(ra.submitted_date) = ${date}
              WHERE a.org_id = ${orgId}
              GROUP BY a.asset_id, a.asset_name, a.category
+             HAVING request_count > 0
              ORDER BY request_count DESC
              LIMIT 3`,
             typeof ({asset_name: "", category: "", request_count: 0})
@@ -401,13 +421,7 @@ service /dashboard/admin on database:dashboardListener {
             };
 
         if topAssets.length() == 0 {
-            return [
-                {
-                    "asset_name": "No assets found",
-                    "category": "",
-                    "request_count": 0
-                }
-            ];
+            return [];
         }
 
         return topAssets;
@@ -443,7 +457,7 @@ service /dashboard/admin on database:dashboardListener {
                     COUNT(requestedmeals.requestedmeal_id) AS count
              FROM mealtypes
              LEFT JOIN requestedmeals 
-               ON requestedmeals.meal_time_id = mealtypes.mealtype_id
+               ON requestedmeals.meal_type_id = mealtypes.mealtype_id
                AND requestedmeals.org_id = ${orgId}
                AND DATE(requestedmeals.meal_request_date) = ${date}
              WHERE mealtypes.org_id = ${orgId}
@@ -497,7 +511,7 @@ service /dashboard/admin on database:dashboardListener {
                     COUNT(requestedmeals.requestedmeal_id) AS count
              FROM mealtypes
              LEFT JOIN requestedmeals 
-               ON requestedmeals.meal_time_id = mealtypes.mealtype_id
+               ON requestedmeals.meal_type_id = mealtypes.mealtype_id
                AND requestedmeals.org_id = ${orgId}
                AND DATE(requestedmeals.meal_request_date) = ${date}
              WHERE mealtypes.org_id = ${orgId}

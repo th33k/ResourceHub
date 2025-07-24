@@ -76,9 +76,9 @@ const AdminDashboard = () => {
     );
   }
 
-  const { stats, resources, mealData, resourceData, mostRequestedAsset } = data;
-  // Optionally, you can add a date picker and pass date to MealTimeDistribution
-  // For now, it defaults to today if not provided
+  const { stats, resources, mealData } = data;
+  // Both MealTimeDistribution and ResourceAllocation now have their own date pickers
+  // and fetch data independently based on selected dates
 
   return (
     <AdminLayout>
@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         {/* Optimized Charts Row with 1:3:1 ratio */}
         <div className="grid items-stretch grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="flex flex-col h-full lg:col-span-1">
-            <ResourceAllocation data={resourceData} mostRequestedAsset={mostRequestedAsset} />
+            <ResourceAllocation />
           </div>
           <div className="flex flex-col h-full lg:col-span-3">
             <MealDistributionChart data={mealData} />
