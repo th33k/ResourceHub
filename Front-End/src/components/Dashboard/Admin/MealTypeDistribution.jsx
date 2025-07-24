@@ -139,7 +139,6 @@ export const MealTypeDistribution = ({ date }) => {
           <input
             type="date"
             value={selectedDate}
-            max={getToday()}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="px-2 py-1 text-sm border rounded"
             style={{
@@ -178,7 +177,6 @@ export const MealTypeDistribution = ({ date }) => {
           <input
             type="date"
             value={selectedDate}
-            max={getToday()}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="px-2 py-1 text-sm border rounded"
             style={{
@@ -283,7 +281,6 @@ export const MealTypeDistribution = ({ date }) => {
         <input
           type="date"
           value={selectedDate}
-          max={getToday()}
           onChange={(e) => setSelectedDate(e.target.value)}
           className="px-2 py-1 text-sm border rounded"
           style={{
@@ -314,7 +311,7 @@ export const MealTypeDistribution = ({ date }) => {
                   }}
                 >
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold mb-1"
+                    className="flex items-center justify-center w-8 h-8 mb-1 text-xs font-bold text-white rounded-full"
                     style={{
                       backgroundColor: COLORS[index % COLORS.length],
                     }}
@@ -338,7 +335,7 @@ export const MealTypeDistribution = ({ date }) => {
             </div>
           ) : (
             <div
-              className="text-center text-xs"
+              className="text-xs text-center"
               style={{ color: theme.palette.text.secondary }}
             >
               {topMealTypes.message || 'No meal requests found for this date'}
