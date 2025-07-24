@@ -48,31 +48,52 @@ const options = {
           const mealTimeIndex = tooltipItem.dataIndex;
           const dataset = tooltipItem.dataset;
           
+          const lines = [`${percentage}% of total meal orders`];
+          
           if (dataset.mealTypesData && dataset.mealTypesData[mealTimeIndex]) {
             const mealTypes = dataset.mealTypesData[mealTimeIndex];
-            const mealTypesList = mealTypes.map(mt => `${mt.type}: ${mt.count} orders`).join(', ');
-            return [`${percentage}% of total meal orders`, `Meal Types: ${mealTypesList}`];
+            lines.push(''); // Empty line for spacing
+            lines.push('Meal Types:');
+            mealTypes.forEach(mt => {
+              lines.push(`• ${mt.type}: ${mt.count} ${mt.count === 1 ? 'order' : 'orders'}`);
+            });
           }
           
-          return `${percentage}% of total meal orders`;
+          return lines;
         },
         footer: function(tooltipItems) {
           const total = tooltipItems[0].dataset.data.reduce((sum, value) => sum + value, 0);
           return `Total Orders: ${total}`;
         }
       },
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-      titleColor: '#fff',
-      bodyColor: '#fff',
-      footerColor: '#fff',
-      borderColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      titleColor: '#1f2937',
+      bodyColor: '#374151',
+      footerColor: '#6b7280',
+      borderColor: 'rgba(0, 0, 0, 0.2)',
       borderWidth: 1,
       cornerRadius: 8,
       displayColors: true,
       titleSpacing: 4,
-      bodySpacing: 4,
+      bodySpacing: 3,
       footerSpacing: 4,
-      padding: 12,
+      padding: 14,
+      titleFont: {
+        size: 13,
+        weight: 'bold'
+      },
+      bodyFont: {
+        size: 11
+      },
+      footerFont: {
+        size: 10
+      },
+      usePointStyle: true,
+      position: 'average',
+      yAlign: 'bottom',
+      xAlign: 'center',
+      caretPadding: 8,
+      caretSize: 6
     },
   },
   interaction: {
