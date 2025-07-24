@@ -86,17 +86,25 @@ export const MealTypeDistribution = ({ date }) => {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [data, setData] = useState(null);
+  const [topMealTypes, setTopMealTypes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`${BASE_URLS.dashboardAdmin}/mealtypedist?date=${selectedDate}`, {
+    
+    // Fetch both meal type distribution and most requested meal types
+    Promise.all([
+      axios.get(`${BASE_URLS.dashboardAdmin}/mealtypedist?date=${selectedDate}`, {
+        headers: { ...getAuthHeader() },
+      }),
+      axios.get(`${BASE_URLS.dashboardAdmin}/mostrequestedmealtypes?date=${selectedDate}`, {
         headers: { ...getAuthHeader() },
       })
-      .then((res) => {
-        setData(res.data);
+    ])
+      .then(([mealDistRes, topMealTypesRes]) => {
+        setData(mealDistRes.data);
+        setTopMealTypes(topMealTypesRes.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -284,6 +292,60 @@ export const MealTypeDistribution = ({ date }) => {
           }}
         />
       </div>
+      
+      {/* Most Requested Meal Types Section */}
+      {topMealTypes && (
+        <div className="w-full mt-4">
+          <h3
+            className="mb-3 text-sm font-medium text-center"
+            style={{ color: theme.palette.text.primary }}
+          >
+            Most Requested Meal Types Today
+          </h3>
+          {topMealTypes.data && topMealTypes.data.length > 0 ? (
+            <div className="flex justify-center gap-4">
+              {topMealTypes.data.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center p-2 rounded-lg"
+                  style={{
+                    background: theme.palette.background.default,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold mb-1"
+                    style={{
+                      backgroundColor: COLORS[index % COLORS.length],
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <span
+                    className="text-xs font-medium text-center"
+                    style={{ color: theme.palette.text.primary }}
+                  >
+                    {item.mealtype}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: theme.palette.text.secondary }}
+                  >
+                    {item.count} orders
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="text-center text-xs"
+              style={{ color: theme.palette.text.secondary }}
+            >
+              {topMealTypes.message || 'No meal requests found for this date'}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
