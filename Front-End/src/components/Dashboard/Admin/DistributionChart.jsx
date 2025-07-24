@@ -42,7 +42,7 @@ export const DistributionChart = () => {
     return days[date.getDay()];
   };
 
-  // Generate labels for past 6 days, today, and tomorrow (8 days) based on selected date
+  // Generate labels for past 6 days, today, and Next Day (8 days) based on selected date
   const generateLabels = () => {
     const labels = [];
     const baseDate = new Date(selectedDate);
@@ -58,10 +58,10 @@ export const DistributionChart = () => {
       }
     }
     
-    // Add tomorrow
-    const tomorrow = new Date(baseDate);
-    tomorrow.setDate(baseDate.getDate() + 1);
-    labels.push(getDayShortName(tomorrow) + ' (Tomorrow)');
+    // Add next day
+    const nextDay = new Date(baseDate);
+    nextDay.setDate(baseDate.getDate() + 1);
+    labels.push(getDayShortName(nextDay) + ' (Next Day)');
     
     return labels;
   };
