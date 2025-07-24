@@ -35,9 +35,9 @@ service /dashboard/admin on database:dashboardListener {
         |} statsCounts = check database:dbClient->queryRow(`
             SELECT
                 (SELECT COUNT(user_id) FROM users WHERE org_id = ${orgId}) AS user_count,
-                (SELECT COUNT(requestedmeal_id) FROM requestedmeals WHERE org_id = ${orgId}) AS mealevents_count,
-                (SELECT COUNT(requestedasset_id) FROM requestedassets WHERE org_id = ${orgId}) AS assetrequests_count,
-                (SELECT COUNT(maintenance_id) FROM maintenance WHERE org_id = ${orgId}) AS maintenance_count
+                (SELECT COUNT(requestedmeal_id) FROM requestedmeals WHERE org_id = ${orgId} AND DATE(meal_request_date) = CURDATE()) AS mealevents_count,
+                (SELECT COUNT(requestedasset_id) FROM requestedassets WHERE org_id = ${orgId} AND DATE(submitted_date) = CURDATE()) AS assetrequests_count,
+                (SELECT COUNT(maintenance_id) FROM maintenance WHERE org_id = ${orgId} AND DATE(submitted_date) = CURDATE()) AS maintenance_count
         `);
 
         int userCount = statsCounts.user_count;
@@ -175,21 +175,21 @@ service /dashboard/admin on database:dashboardListener {
                 "monthLabels": monthLabels
             },
             {
-                "title": "Meals Served",
+                "title": "Today's Meals",
                 "value": mealEventsCount,
                 "icon": "Utensils",
                 "monthlyData": monthlyMealCounts,
                 "monthLabels": monthLabels
             },
             {
-                "title": "Resources",
+                "title": "Today's Resources",
                 "value": assetRequestsCount,
                 "icon": "Box",
                 "monthlyData": monthlyAssetRequestCounts,
                 "monthLabels": monthLabels
             },
             {
-                "title": "Services",
+                "title": "Today's Services",
                 "value": maintenanceCount,
                 "icon": "Wrench",
                 "monthlyData": monthlyMaintenanceCounts,
