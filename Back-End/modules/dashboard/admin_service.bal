@@ -372,6 +372,45 @@ service /dashboard/admin on database:dashboardListener {
         return result;
     }
 
+    // Get most requested asset data
+    resource function get mostrequestedasset(http:Request req) returns json|error {
+        jwt:Payload payload = check common:getValidatedPayload(req);
+        if (!common:hasAnyRole(payload, ["Admin", "SuperAdmin"])) {
+            return error("Forbidden: You do not have permission to access this resource");
+        }
+
+        int orgId = check common:getOrgId(payload);
+
+        // Query to get the most requested asset
+        stream<record {|string asset_name; string category; int request_count;|}, sql:Error?> mostRequestedStream = database:dbClient->query(
+            `SELECT a.asset_name, a.category, COUNT(ra.requestedasset_id) AS request_count
+             FROM assets a
+             LEFT JOIN requestedassets ra ON a.asset_id = ra.asset_id AND ra.org_id = ${orgId}
+             WHERE a.org_id = ${orgId}
+             GROUP BY a.asset_id, a.asset_name, a.category
+             ORDER BY request_count DESC
+             LIMIT 1`,
+            typeof ({asset_name: "", category: "", request_count: 0})
+        );
+
+        // Get the result
+        record {|string asset_name; string category; int request_count;|}? mostRequested = ();
+        check from var row in mostRequestedStream
+            do {
+                mostRequested = row;
+            };
+
+        if mostRequested is () {
+            return {
+                "asset_name": "No assets found",
+                "category": "",
+                "request_count": 0
+            };
+        }
+
+        return mostRequested;
+    }
+
     // NEW: Meal type distribution for a selected date (pie chart)
     resource function get mealtypedist(http:Request req) returns json|error {
         jwt:Payload payload = check common:getValidatedPayload(req);

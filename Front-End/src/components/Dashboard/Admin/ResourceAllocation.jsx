@@ -20,7 +20,7 @@ const options = {
 };
 
 // Updated to accept dynamic data as props
-export const ResourceAllocation = ({ data }) => {
+export const ResourceAllocation = ({ data, mostRequestedAsset }) => {
   const theme = useTheme();
 
   const chartData = {
@@ -73,7 +73,44 @@ export const ResourceAllocation = ({ data }) => {
       >
         Current resource distribution
       </p>
-      <Doughnut data={chartData} options={options} />
+      <div className="flex-1 w-full flex items-center justify-center">
+        <Doughnut data={chartData} options={options} />
+      </div>
+      
+      {/* Most Requested Asset Section */}
+      {mostRequestedAsset && (
+        <div 
+          className="mt-4 w-full text-center p-3 rounded-lg"
+          style={{
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? 'rgba(59, 130, 246, 0.1)' 
+              : 'rgba(59, 130, 246, 0.05)',
+            border: `1px solid ${theme.palette.mode === 'dark' 
+              ? 'rgba(59, 130, 246, 0.3)' 
+              : 'rgba(59, 130, 246, 0.2)'}`,
+          }}
+        >
+          <h3 
+            className="text-sm font-semibold mb-1"
+            style={{ color: theme.palette.text.primary }}
+          >
+            Most Requested Asset
+          </h3>
+          <p 
+            className="text-lg font-bold"
+            style={{ color: theme.palette.primary.main }}
+          >
+            {mostRequestedAsset.asset_name}
+          </p>
+          <p 
+            className="text-xs"
+            style={{ color: theme.palette.text.secondary }}
+          >
+            {mostRequestedAsset.request_count} request{mostRequestedAsset.request_count !== 1 ? 's' : ''}
+            {mostRequestedAsset.category && ` • ${mostRequestedAsset.category}`}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

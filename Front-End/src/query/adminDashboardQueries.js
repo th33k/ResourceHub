@@ -7,7 +7,7 @@ export function useAdminDashboardData() {
   return useQuery({
     queryKey: ['adminDashboardData'],
     queryFn: async () => {
-      const [statsRes, mealRes, resourceAllocRes] = await Promise.all([
+      const [statsRes, mealRes, resourceAllocRes, mostRequestedAssetRes] = await Promise.all([
         axios.get(`${BASE_URLS.dashboardAdmin}/stats`, {
           headers: { ...getAuthHeader() },
         }),
@@ -17,11 +17,15 @@ export function useAdminDashboardData() {
         axios.get(`${BASE_URLS.dashboardAdmin}/resourceallocation`, {
           headers: { ...getAuthHeader() },
         }),
+        axios.get(`${BASE_URLS.dashboardAdmin}/mostrequestedasset`, {
+          headers: { ...getAuthHeader() },
+        }),
       ]);
       return {
         stats: statsRes.data,
         mealData: mealRes.data,
         resourceData: resourceAllocRes.data,
+        mostRequestedAsset: mostRequestedAssetRes.data,
       };
     },
     staleTime: 1000 * 60, // 1 minute
