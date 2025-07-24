@@ -24,7 +24,7 @@ const COLORS = [
 ];
 
 // Updated to be self-contained with date functionality
-export const ResourceAllocation = ({ date }) => {
+export const ChartResources = ({ date }) => {
   // If no date prop, use today in YYYY-MM-DD
   const getToday = () => {
     const today = new Date();
@@ -104,7 +104,7 @@ export const ResourceAllocation = ({ date }) => {
             }}
           />
         </div>
-        <div>Loading available resources...</div>
+        <div>Loading available resources and asset request data...</div>
       </div>
     );
   }
@@ -151,10 +151,22 @@ export const ResourceAllocation = ({ date }) => {
   if (!data || data.length === 0) {
     chartContent = (
       <div
-        className="flex items-center justify-center flex-1 text-gray-500"
+        className="flex flex-col items-center justify-center flex-1 p-6 text-center"
         style={{ minHeight: 180 }}
       >
-        No available resources for selected date.
+        <div className="mb-4 text-4xl">📦</div>
+        <div className="mb-2 text-sm font-medium" style={{ color: theme.palette.text.primary }}>
+          No resource data available
+        </div>
+        <div className="mb-4 text-xs" style={{ color: theme.palette.text.secondary }}>
+          No available resources for the selected date. Try selecting a different date or check if assets have been configured for your organization.
+        </div>
+        <div className="space-y-1 text-xs" style={{ color: theme.palette.text.secondary }}>
+          <div>💡 <strong>Tips:</strong></div>
+          <div>• Check if assets are configured</div>
+          <div>• Verify resource categories are set up</div>
+          <div>• Try selecting a different date</div>
+        </div>
       </div>
     );
   } else {
@@ -175,44 +187,60 @@ export const ResourceAllocation = ({ date }) => {
 
     // Create options with access to asset names
     const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1.2,
       plugins: {
         legend: {
-          position: 'bottom',
+          display: false // We'll create a custom legend
         },
         tooltip: {
           callbacks: {
             label: function (tooltipItem) {
-              return `${tooltipItem.label}: ${tooltipItem.raw} available`;
+              const categoryName = tooltipItem.label;
+              const count = tooltipItem.raw;
+              return `${categoryName}: ${count} available assets`;
             },
             title: function (tooltipItems) {
-              return 'Available Resources';
+              const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              });
+              return `Available Resources - ${selectedDateFormatted}`;
             },
             afterLabel: function (tooltipItem) {
               const total = tooltipItem.dataset.data.reduce((sum, value) => sum + value, 0);
               const percentage = ((tooltipItem.raw / total) * 100).toFixed(1);
-              const percentageText = `${percentage}% of total available`;
+              const percentageText = `${percentage}% of total available resources`;
               
               // Get asset names for this category from the data
               const categoryName = tooltipItem.label;
               const assetNames = assetNamesByCategory[categoryName];
               
               if (assetNames && assetNames.length > 0) {
-                const assetNamesText = `Assets: ${assetNames.join(', ')}`;
+                const assetNamesText = `Available Assets: ${assetNames.join(', ')}`;
                 return [percentageText, assetNamesText];
               }
               
               return percentageText;
             },
+            footer: function(tooltipItems) {
+              const total = tooltipItems[0].dataset.data.reduce((sum, value) => sum + value, 0);
+              return `Total Resources: ${total}`;
+            }
           },
           backgroundColor: 'rgba(0, 0, 0, 0.9)',
           titleColor: '#fff',
           bodyColor: '#fff',
+          footerColor: '#fff',
           borderColor: 'rgba(255, 255, 255, 0.2)',
           borderWidth: 1,
           cornerRadius: 8,
           displayColors: true,
-          bodySpacing: 4,
           titleSpacing: 4,
+          bodySpacing: 4,
           footerSpacing: 4,
           padding: 12,
         },
@@ -232,15 +260,40 @@ export const ResourceAllocation = ({ date }) => {
         {
           data: data.map((item) => item.allocated),
           backgroundColor: COLORS,
-          borderWidth: 1,
+          borderWidth: 2,
+          borderColor: '#fff',
           hoverBackgroundColor: COLORS.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.8)')),
-          hoverBorderWidth: 2,
+          hoverBorderWidth: 3,
           hoverBorderColor: '#fff',
+          hoverOffset: 10,
         },
       ],
     };
     
-    chartContent = <Doughnut data={chartData} options={chartOptions} />;
+    chartContent = (
+      <div style={{ width: '100%', maxWidth: '220px', height: 'auto' }}>
+        <div style={{ width: '100%', height: '180px', position: 'relative' }}>
+          <Doughnut data={chartData} options={chartOptions} />
+        </div>
+        {/* Custom Legend */}
+        <div className="flex flex-col items-start mt-3 space-y-1">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              ></div>
+              <span
+                className="text-xs"
+                style={{ color: theme.palette.text.primary }}
+              >
+                {item.category} ({item.allocated})
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -261,14 +314,32 @@ export const ResourceAllocation = ({ date }) => {
         className="mb-2 text-xl font-semibold"
         style={{ color: theme.palette.text.primary }}
       >
-        Available Resources
+        Resource Distribution
       </h2>
       <p
         className="mb-6 text-sm"
         style={{ color: theme.palette.text.secondary }}
       >
-        Available resources by category for the selected date
+        Available Assets for the selected date
       </p>
+      <div className="flex justify-center w-full mb-4">
+        <div 
+          className="px-4 py-2 text-lg font-medium rounded-lg"
+          style={{ 
+            color: theme.palette.text.primary,
+            background: theme.palette.background.default,
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: theme.shadows[1]
+          }}
+        >
+          {new Date(selectedDate).toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
+      </div>
       {chartContent}
       <div className="flex justify-center w-full mt-6">
         <input
@@ -283,63 +354,81 @@ export const ResourceAllocation = ({ date }) => {
         />
       </div>
       
-      {/* Top 3 Most Requested Assets Section */}
-      <div className="w-full mt-4">
-        <h3
-          className="mb-3 text-sm font-medium text-center"
-          style={{ color: theme.palette.text.primary }}
-        >
-          Most Requested Assets Today
-        </h3>
-        {mostRequestedAssets && mostRequestedAssets.length > 0 ? (
-          <div className="flex justify-center gap-4">
-            {mostRequestedAssets.slice(0, 3).map((asset, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center p-2 rounded-lg"
-                style={{
+      {/* Most Requested Assets Section */}
+      {mostRequestedAssets && (
+        <div className="w-full pt-4 mt-4 border-t" style={{ borderColor: theme.palette.divider }}>
+          <h3
+            className="mb-3 text-sm font-medium text-center"
+            style={{ color: theme.palette.text.primary }}
+          >
+            Most Requested Resource
+          </h3>
+          {mostRequestedAssets.length > 0 ? (
+            <>
+              <div className="flex justify-center gap-4 mb-3">
+                {mostRequestedAssets.slice(0, 3).map((asset, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center p-3 rounded-lg"
+                    style={{
+                      background: theme.palette.background.default,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <div className="mb-2 text-lg">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                    </div>
+                    <span
+                      className="mb-1 text-xs font-medium text-center"
+                      style={{ color: theme.palette.text.primary }}
+                    >
+                      {asset.asset_name}
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: theme.palette.text.secondary }}
+                    >
+                      {asset.category}
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: theme.palette.text.secondary }}
+                    >
+                      {asset.request_count} {asset.request_count === 1 ? 'request' : 'requests'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Summary for top assets */}
+              <div 
+                className="p-2 text-xs text-center rounded"
+                style={{ 
                   background: theme.palette.background.default,
-                  border: `1px solid ${theme.palette.divider}`,
+                  color: theme.palette.text.secondary,
+                  border: `1px solid ${theme.palette.divider}`
                 }}
               >
-                <div
-                  className="flex items-center justify-center w-8 h-8 mb-1 text-xs font-bold text-white rounded-full"
-                  style={{
-                    backgroundColor: COLORS[index % COLORS.length],
-                  }}
-                >
-                  {index + 1}
-                </div>
-                <span
-                  className="text-xs font-medium text-center"
-                  style={{ color: theme.palette.text.primary }}
-                >
-                  {asset.asset_name}
-                </span>
-                <span
-                  className="text-xs"
-                  style={{ color: theme.palette.text.secondary }}
-                >
-                  {asset.category}
-                </span>
-                <span
-                  className="text-xs"
-                  style={{ color: theme.palette.text.secondary }}
-                >
-                  {asset.request_count} requests
-                </span>
+                💡 Top {Math.min(mostRequestedAssets.length, 3)} resource types represent{' '}
+                {((mostRequestedAssets.slice(0, 3).reduce((sum, asset) => sum + asset.request_count, 0) / 
+                   (mostRequestedAssets.reduce((sum, asset) => sum + asset.request_count, 0) || 1)) * 100).toFixed(1)}%{' '}
+                of today's requests
               </div>
-            ))}
-          </div>
-        ) : (
-          <div
-            className="py-4 text-sm text-center"
-            style={{ color: theme.palette.text.secondary }}
-          >
-            No asset requests found for this date
-          </div>
-        )}
-      </div>
+            </>
+          ) : (
+            <div
+              className="p-4 text-xs text-center rounded-lg"
+              style={{ 
+                color: theme.palette.text.secondary,
+                background: theme.palette.background.default,
+                border: `1px dashed ${theme.palette.divider}`
+              }}
+            >
+              No asset requests found for this date
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

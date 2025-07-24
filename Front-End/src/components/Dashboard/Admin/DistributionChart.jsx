@@ -25,7 +25,7 @@ ChartJS.register(
   Legend,
 );
 
-export const MealDistributionChart = () => {
+export const DistributionChart = () => {
   const theme = useTheme();
   const [filterType, setFilterType] = useState('meals');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -109,9 +109,9 @@ export const MealDistributionChart = () => {
       case 'meals':
         return 'Meal Distribution';
       case 'assets':
-        return 'Asset Request Distribution';
+        return 'Asset Distribution';
       case 'services':
-        return 'Service Request Distribution';
+        return 'Service Distribution';
       default:
         return 'Distribution Chart';
     }
@@ -120,11 +120,11 @@ export const MealDistributionChart = () => {
   const getChartDescription = () => {
     switch (filterType) {
       case 'meals':
-        return 'Weekly meal service trends';
+        return `Weekly meal request trends for the period centered on ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
       case 'assets':
-        return 'Weekly asset request trends by category';
+        return `Weekly asset request trends for the period centered on ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
       case 'services':
-        return 'Weekly maintenance service request trends';
+        return `Weekly service request trends for the period centered on ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
       default:
         return 'Weekly trends';
     }
@@ -147,6 +147,34 @@ export const MealDistributionChart = () => {
       legend: {
         position: 'bottom',
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          title: function(tooltipItems) {
+            const label = tooltipItems[0].label;
+            const typeText = filterType === 'meals' ? 'Meal Requests' : 
+                           filterType === 'assets' ? 'Asset Requests' : 'Service Requests';
+            return `${typeText} - ${label}`;
+          },
+          label: function(context) {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            const unit = filterType === 'meals' ? 'meal' : filterType === 'assets' ? 'asset' : 'service';
+            return `${label}: ${value} ${unit}${value !== 1 ? 's' : ''}`;
+          },
+          footer: function(tooltipItems) {
+            const total = tooltipItems.reduce((sum, item) => sum + item.parsed.y, 0);
+            const unit = filterType === 'meals' ? 'meal' : filterType === 'assets' ? 'asset' : 'service';
+            return `Total: ${total} ${unit}${total !== 1 ? 's' : ''} on this day`;
+          }
+        }
+      }
     },
     scales: {
       y: {
@@ -161,7 +189,18 @@ export const MealDistributionChart = () => {
           },
           stepSize: 1,
         },
+        title: {
+          display: true,
+          text: filterType === 'meals' ? 'Number of Meals' : 
+                filterType === 'assets' ? 'Asset Requests' : 'Service Requests'
+        }
       },
+      x: {
+        title: {
+          display: true,
+          text: 'Date Range (7 days)'
+        }
+      }
     },
   };
 
@@ -226,7 +265,7 @@ export const MealDistributionChart = () => {
       className="p-6 rounded-lg"
     >
       {/* Header with filters */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2
             className="mb-2 text-xl font-semibold"
@@ -279,6 +318,44 @@ export const MealDistributionChart = () => {
       <div className="mt-4">
         <Line options={options} data={chartData} />
       </div>
+      
+      {/* Data Insights */}
+      {data.datasets && data.datasets.length > 0 && (
+        <div className="pt-4 mt-4 border-t" style={{ borderColor: theme.palette.divider }}>
+          <h4 className="mb-2 text-sm font-medium" style={{ color: theme.palette.text.primary }}>
+            Weekly Insights
+          </h4>
+          <div className="grid grid-cols-1 gap-4 text-xs md:grid-cols-3">
+            {data.datasets.map((dataset, index) => {
+              const total = dataset.data.reduce((sum, val) => sum + val, 0);
+              const average = (total / dataset.data.length).toFixed(1);
+              const peak = Math.max(...dataset.data);
+              const peakDay = data.labels[dataset.data.indexOf(peak)];
+              
+              return (
+                <div
+                  key={index}
+                  className="p-2 rounded"
+                  style={{ 
+                    background: theme.palette.background.default,
+                    border: `1px solid ${theme.palette.divider}`
+                  }}
+                >
+                  <div className="mb-1 font-medium" style={{ color: dataset.borderColor }}>
+                    {dataset.label}
+                  </div>
+                  <div style={{ color: theme.palette.text.secondary }}>
+                    Weekly Total: {total} | Avg: {average}/day
+                  </div>
+                  <div style={{ color: theme.palette.text.secondary }}>
+                    Peak: {peak} on {peakDay}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
