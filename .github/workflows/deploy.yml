@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: Development
 
     steps:
       - name: Checkout code
@@ -28,31 +29,28 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/resourcehub:latest
-          # No build-args for secrets; secrets will be injected at runtime
 
-      # Add deployment steps
-      - name: Deploy container
-        env:
-          USER: ${{ secrets.USER }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          HOST: ${{ secrets.HOST }}
-          PORT: ${{ secrets.PORT }}
-          DATABASE: ${{ secrets.DATABASE }}
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          PDFSHIFT_API_KEY: ${{ secrets.PDFSHIFT_API_KEY }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      - name: Set up Docker context for remote server
         run: |
+          docker context create remote --docker "host=${{ secrets.DOCKER_HOST }}"
+          docker context use remote
+
+      - name: Deploy to remote server
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/resourcehub:latest
+          docker stop resourcehub || true
+          docker rm resourcehub || true
           docker run -d \
-            -e USER="$USER" \
-            -e PASSWORD="$PASSWORD" \
-            -e HOST="$HOST" \
-            -e PORT="$PORT" \
-            -e DATABASE="$DATABASE" \
-            -e SMTP_HOST="$SMTP_HOST" \
-            -e SMTP_PASSWORD="$SMTP_PASSWORD" \
-            -e SMTP_USER="$SMTP_USER" \
-            -e PDFSHIFT_API_KEY="$PDFSHIFT_API_KEY" \
+            --name resourcehub \
+            -e USER="${{ secrets.USER }}" \
+            -e PASSWORD="${{ secrets.PASSWORD }}" \
+            -e HOST="${{ secrets.HOST }}" \
+            -e PORT="${{ secrets.PORT }}" \
+            -e DATABASE="${{ secrets.DATABASE }}" \
+            -e SMTP_HOST="${{ secrets.SMTP_HOST }}" \
+            -e SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" \
+            -e SMTP_USER="${{ secrets.SMTP_USER }}" \
+            -e PDFSHIFT_API_KEY="${{ secrets.PDFSHIFT_API_KEY }}" \
             -p 80:80 -p 9090-9094:9090-9094 \
-            "$DOCKERHUB_USERNAME/resourcehub:latest"
+            ${{ secrets.DOCKERHUB_USERNAME }}/resourcehub:latest
+          docker logs resourcehub

@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
-    openjdk-11-jre
+    openjdk-11-jre && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Download and extract Ballerina SDK
 RUN curl -L https://github.com/ballerina-platform/ballerina-lang/releases/download/v2201.12.7/ballerina-2201.12.7-swan-lake.zip -o ballerina.zip && \
@@ -26,12 +27,11 @@ COPY Front-End /app/Front-End
 RUN npm install && npm run build
 
 # Port configuration
-EXPOSE 9090 9091 9092 9093 9094 80
+EXPOSE 80 9090-9094
 
 # Create a non-root user and switch to it
 RUN useradd -u 10001 -m resourcehub
 USER 10001
-
 
 # Prepare the final image
 WORKDIR /app
