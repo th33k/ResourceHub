@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y \
 # Download and extract Ballerina SDK
 RUN curl -L https://dist.ballerina.io/downloads/2201.12.0/ballerina-2201.12.0-swan-lake.zip -o ballerina.zip && \
     unzip -t ballerina.zip && \
-    unzip ballerina.zip -d /opt/ballerina && \
-    rm ballerina.zip
+    unzip ballerina.zip -d /opt && \
+    rm ballerina.zip && \
+    chmod +x /opt/ballerina-2201.12.0-swan-lake/bin/bal && \
+    /opt/ballerina-2201.12.0-swan-lake/bin/bal version
 ENV PATH="/opt/ballerina-2201.12.0-swan-lake/bin:${PATH}"
 
 # Build the backend
