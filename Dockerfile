@@ -15,7 +15,7 @@ RUN curl -L https://dist.ballerina.io/downloads/2201.12.0/ballerina-2201.12.0-sw
     unzip -t ballerina.zip && \
     unzip ballerina.zip -d /opt/ballerina && \
     rm ballerina.zip
-ENV PATH="/opt/ballerina/bin:${PATH}"
+ENV PATH="/opt/ballerina-2201.12.0-swan-lake/bin:${PATH}"
 
 # Build the backend
 WORKDIR /app/Back-End
