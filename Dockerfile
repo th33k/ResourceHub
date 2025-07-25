@@ -7,8 +7,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
-    openjdk-11-jre && \
+    openjdk-11-jdk && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set JAVA_HOME environment variable
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+RUN java -version && \
+    echo "JAVA_HOME is set to $JAVA_HOME"
 
 # Download and extract Ballerina SDK
 RUN curl -L https://dist.ballerina.io/downloads/2201.12.0/ballerina-2201.12.0-swan-lake.zip -o ballerina.zip && \
