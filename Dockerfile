@@ -28,6 +28,10 @@ RUN npm install && npm run build
 # Port configuration
 EXPOSE 9090 9091 9092 9093 9094 80
 
+# Create a non-root user and switch to it
+RUN useradd -u 10014 -m resourcehub
+USER resourcehub
+
 # Prepare the final image
 WORKDIR /app
 CMD ["sh", "-c", "java -jar /app/Back-End/target/bin/ResourceHub.jar & npx serve -s /app/Front-End/build -l 80"]
