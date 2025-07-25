@@ -30,7 +30,8 @@ EXPOSE 9090 9091 9092 9093 9094 80
 
 # Create a non-root user and switch to it
 RUN useradd -u 10001 -m resourcehub
-USER resourcehub
+USER 10001
+
 
 # Prepare the final image
 WORKDIR /app
