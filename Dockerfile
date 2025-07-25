@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Download and extract Ballerina SDK
-RUN curl -L https://github.com/ballerina-platform/ballerina-lang/releases/download/v2201.12.7/ballerina-2201.12.7-swan-lake.zip -o ballerina.zip && \
+RUN curl -L https://dist.ballerina.io/downloads/2201.12.0/ballerina-2201.12.0-swan-lake.zip -o ballerina.zip && \
+    unzip -t ballerina.zip && \
     unzip ballerina.zip -d /opt/ballerina && \
     rm ballerina.zip
 ENV PATH="/opt/ballerina/bin:${PATH}"
